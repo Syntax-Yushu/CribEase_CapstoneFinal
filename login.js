@@ -36,7 +36,7 @@ export default function Login({ navigation }) {
       // Sign in
       await signInWithEmailAndPassword(auth, emailToUse, password);
       alert('Login successful!');
-      navigation.navigate('Dashboard');
+      navigation.navigate('TabNavigation');
     } catch (error) {
       console.error(error);
       alert(error.message);
@@ -87,7 +87,6 @@ export default function Login({ navigation }) {
       <Text style={styles.title}>SIGN IN</Text>
       <Text style={styles.subtitle}>TO CONTINUE</Text>
 
-      {/* Username or Email */}
       <TextInput
         style={styles.input}
         placeholder="Username or Email"
