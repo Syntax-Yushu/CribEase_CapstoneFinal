@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
@@ -6,6 +6,7 @@ import { Linking } from 'react-native';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function Signup({ navigation }) {
   // Form state
@@ -13,17 +14,26 @@ export default function Signup({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [birthdate, setBirthdate] = useState(new Date()); // Date object
+  const [showDatePicker, setShowDatePicker] = useState(false); // toggle for picker
   const [role, setRole] = useState('Parent');
   const [agree, setAgree] = useState(false);
 
+  // Handle date change
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios'); // keep open for iOS
+    if (selectedDate) {
+      setBirthdate(selectedDate);
+    }
+  };
+
   // Register function
   const handleRegister = async () => {
-    // Validation
     if (!agree) {
       alert('You must agree to the Terms of Use and Privacy Policy');
       return;
     }
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword || !birthdate) {
       alert('Please fill all fields');
       return;
     }
@@ -33,20 +43,19 @@ export default function Signup({ navigation }) {
     }
 
     try {
-      // 1️⃣ Create user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2️⃣ Save extra info to Firestore
       await setDoc(doc(db, 'users', user.uid), {
         fullName,
         email,
+        birthdate: birthdate.toISOString().split('T')[0], // store as YYYY-MM-DD
         role,
         createdAt: new Date(),
       });
 
       alert('Registered successfully!');
-      navigation.navigate('HomePage'); // Navigate to HomePage
+      navigation.navigate('HomePage');
     } catch (error) {
       console.error(error);
       alert(error.message);
@@ -99,22 +108,42 @@ export default function Signup({ navigation }) {
         secureTextEntry
       />
 
+      {/* Birthdate Picker */}
+      <Text style={styles.label}>Birthdate</Text>
+      <TouchableOpacity 
+        style={styles.input} 
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={{ color: birthdate ? '#000' : '#555' }}>
+          {birthdate ? birthdate.toDateString() : 'Select Birthdate'}
+        </Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={birthdate || new Date()}
+          mode="date"
+          display="default"
+          maximumDate={new Date()} // prevent future dates
+          onChange={onChangeDate}
+        />
+      )}
+
       {/* Role Picker */}
       <Text style={styles.label}>Choose a Role</Text>
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={role}
           onValueChange={(itemValue) => setRole(itemValue)}
-          style={[styles.picker, { color: '#555' }]}   // picker text color
-          itemStyle={{ color: '#555' }}                // dropdown item color
+          style={[styles.picker, { color: '#555' }]}
+          itemStyle={{ color: '#555' }}
         >
           <Picker.Item label="Parent" value="Parent" />
           <Picker.Item label="Caregiver" value="Caregiver" />
         </Picker>
-
       </View>
 
-      {/* Custom Checkbox with clickable Terms */}
+      {/* Terms Checkbox */}
       <TouchableOpacity
         style={styles.checkboxContainer}
         onPress={() => setAgree(!agree)}
@@ -146,118 +175,114 @@ export default function Signup({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>Already have an account? <Text style={styles.loginLink}>Login</Text>
-        </Text>
+        <Text style={styles.loginText}>Already have an account? <Text style={styles.loginLink}>Login</Text></Text>
       </TouchableOpacity>
-
     </View>
   );
 }
 
-// Styles
+// Styles (unchanged)
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 30,
-    paddingTop: 80,
-    backgroundColor: '#fff',
+     flex: 1, 
+     alignItems: 'center', 
+     paddingHorizontal: 30, 
+     paddingTop: 80, 
+     backgroundColor: '#fff' 
+    },
+  backButton: { 
+    position: 'absolute', 
+    top: 50, 
+    left: 20, 
+    zIndex: 1
+   },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#a34f9f', 
+    marginBottom: 5 
   },
-  backButton: {
-    position: 'absolute',  
-    top: 50,                
-    left: 20,          
-    zIndex: 1,
+  subtitle: { 
+    fontSize: 18, 
+    color: '#a34f9f', 
+    marginBottom: 30 
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#a34f9f',
-    marginBottom: 5,
+  input: { 
+    width: '100%', 
+    borderWidth: 1, 
+    borderColor: '#a34f9f', 
+    borderRadius: 10, 
+    padding: 12, 
+    marginVertical: 8 
   },
-  subtitle: {
-    fontSize: 18,
-    color: '#a34f9f',
-    marginBottom: 30,
+  label: { 
+    alignSelf: 'flex-start', 
+    marginBottom: 5, 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#a34f9f' 
   },
-  input: {
-    width: '100%',
-    borderWidth: 1,
+  pickerContainer: { 
+    width: '100%', 
+    borderWidth: 1, 
     borderColor: '#a34f9f',
-    borderRadius: 10,
-    padding: 12,
-    marginVertical: 8,
+    borderRadius: 10, 
+    marginVertical: 8, 
+    overflow: 'hidden' 
   },
-  label: {
-    alignSelf: 'flex-start',
-    marginBottom: 5,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#a34f9f',
+  picker: { 
+    width: '100%' 
   },
-  pickerContainer: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#a34f9f',
-    borderRadius: 10,
-    marginVertical: 8,
-    overflow: 'hidden',
+  checkboxContainer: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginVertical: 15, 
+    width: '100%' 
   },
-  picker: {
-    width: '100%',
+  checkbox: { 
+    width: 25, 
+    height: 25, 
+    borderWidth: 1, 
+    borderColor: '#a34f9f', 
+    borderRadius: 5, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
   },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 15,
-    width: '100%',
+  checkedBox: { 
+    backgroundColor: '#a34f9f' 
   },
-  checkbox: {
-    width: 25,
-    height: 25,
-    borderWidth: 1,
-    borderColor: '#a34f9f',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+  checkboxText: { 
+    marginLeft: 10, 
+    color: '#a34f9f', 
+    flex: 1, 
+    flexWrap: 'wrap' 
   },
-  checkedBox: {
-    backgroundColor: '#a34f9f',
+  linkText: { 
+    color: '#a34f9f', 
+    fontWeight: 'bold', 
+    textDecorationLine: 'underline' 
   },
-  checkboxText: {
-    marginLeft: 10,
-    color: '#a34f9f',
-    flex: 1,
-    flexWrap: 'wrap',
+  registerButton: { 
+    backgroundColor: '#a34f9f', 
+    paddingVertical: 15, 
+    width: '100%', 
+    borderRadius: 20, 
+    marginTop: 10, 
+    alignItems: 'center' 
   },
-  linkText: {
-    color: '#a34f9f',
-    fontWeight: 'bold',
-    textDecorationLine: 'underline',
+  registerButtonText: { 
+    color: '#fff', 
+    fontSize: 18, 
+    fontWeight: 'bold' 
   },
-  registerButton: {
-    backgroundColor: '#a34f9f',
-    paddingVertical: 15,
-    width: '100%',
-    borderRadius: 20,
-    marginTop: 10,
-    alignItems: 'center',
+  loginText: { 
+    marginTop: 20, 
+    fontSize: 15, 
+    color: '#555', 
+    textAlign: 'center' 
   },
-  registerButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  loginLink: { 
+    color: '#a34f9f', 
+    fontWeight: 'bold' 
   },
-  loginText: {
-  marginTop: 20,
-  fontSize: 15,
-  color: '#555',
-  textAlign: 'center',
-},
-
-loginLink: {
-  color: '#a34f9f',
-  fontWeight: 'bold',
-},
-
 });

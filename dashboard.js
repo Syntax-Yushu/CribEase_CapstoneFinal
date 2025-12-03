@@ -6,11 +6,11 @@ import { ref, onValue } from 'firebase/database';
 export default function Dashboard() {
   const [data, setData] = useState({
     temperature: 0,
-    humidity: 0,
+    //humidity: 0,
     sound: 'Quiet',
     distance: 0,
     fallStatus: 'Absent',
-    fallCount: 0, 
+    //fallCount: 0, 
   });
 
   useEffect(() => {
