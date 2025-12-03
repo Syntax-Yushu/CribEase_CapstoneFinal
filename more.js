@@ -7,7 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 export default function More() {
   const navigation = useNavigation();
-  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -18,7 +18,7 @@ export default function More() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-          setUsername(userSnap.data().username);
+          setFullName(userSnap.data().fullName);
         }
       }
     };
@@ -28,15 +28,15 @@ export default function More() {
 
   return (
     <View style={styles.container}>
-      {username !== '' && (
+      {fullName !== '' && (
         <View style={styles.header}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {username.charAt(0).toUpperCase()}
+              {fullName.charAt(0).toUpperCase()}
             </Text>
           </View>
 
-          <Text style={styles.greeting}>Hi, {username}</Text>
+          <Text style={styles.greeting}>Hi, {fullName}</Text>
         </View>
       )}
 
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: '#fff',
-    fontSize: 40,
+    fontSize: 70,
     fontWeight: 'bold',
   },
   greeting: {

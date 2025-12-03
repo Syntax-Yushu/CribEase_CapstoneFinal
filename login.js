@@ -1,40 +1,25 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { auth, db } from './firebase';
+import { auth } from './firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function Login({ navigation }) {
-  const [identifier, setIdentifier] = useState(''); // username or email
+  const [email, setEmail] = useState(''); // Only email now
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Login function
   const handleLogin = async () => {
-    if (!identifier || !password) {
+    if (!email || !password) {
       alert('Please fill all fields');
       return;
     }
 
     setLoading(true);
     try {
-      let emailToUse = identifier;
-
-      // Check if identifier is username
-      if (!identifier.includes('@')) {
-        const q = query(collection(db, 'users'), where('username', '==', identifier));
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-          alert('Username not found');
-          setLoading(false);
-          return;
-        }
-        emailToUse = querySnapshot.docs[0].data().email;
-      }
-
-      // Sign in
-      await signInWithEmailAndPassword(auth, emailToUse, password);
+      // Sign in directly using email
+      await signInWithEmailAndPassword(auth, email, password);
       alert('Login successful!');
       navigation.navigate('TabNavigation');
     } catch (error) {
@@ -47,26 +32,13 @@ export default function Login({ navigation }) {
 
   // Forgot Password function
   const handleForgotPassword = async () => {
-    if (!identifier) {
-      alert('Please enter your username or email first');
+    if (!email) {
+      alert('Please enter your email first');
       return;
     }
 
     try {
-      let emailToUse = identifier;
-
-      // If user entered username, find the email
-      if (!identifier.includes('@')) {
-        const q = query(collection(db, 'users'), where('username', '==', identifier));
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-          alert('Username not found');
-          return;
-        }
-        emailToUse = querySnapshot.docs[0].data().email;
-      }
-
-      await sendPasswordResetEmail(auth, emailToUse);
+      await sendPasswordResetEmail(auth, email);
       alert('Password reset email sent! Check your inbox.');
     } catch (error) {
       console.error(error);
@@ -87,12 +59,14 @@ export default function Login({ navigation }) {
       <Text style={styles.title}>SIGN IN</Text>
       <Text style={styles.subtitle}>TO CONTINUE</Text>
 
+      {/* Email Input */}
       <TextInput
         style={styles.input}
-        placeholder="Username or Email"
+        placeholder="Email"
         placeholderTextColor="#555"
-        value={identifier}
-        onChangeText={setIdentifier}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
       />
 
       {/* Password */}
@@ -115,8 +89,10 @@ export default function Login({ navigation }) {
         <Text style={styles.loginButtonText}>{loading ? 'Logging in...' : 'Login'}</Text>
       </TouchableOpacity>
 
+      {/* Signup Link */}
       <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={styles.signupText}>Don’t have an account? <Text style={styles.signupLink}>Sign up</Text>
+        <Text style={styles.signupText}>
+          Don’t have an account? <Text style={styles.signupLink}>Sign up</Text>
         </Text>
       </TouchableOpacity>
 
@@ -178,15 +154,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   signupText: {
-  marginTop: 20,
-  fontSize: 15,
-  color: '#555',
-  textAlign: 'center',
-},
-
-signupLink: {
-  color: '#a34f9f',
-  fontWeight: 'bold',
-},
-
+    marginTop: 20,
+    fontSize: 15,
+    color: '#555',
+    textAlign: 'center',
+  },
+  signupLink: {
+    color: '#a34f9f',
+    fontWeight: 'bold',
+  },
 });

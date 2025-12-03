@@ -9,7 +9,7 @@ import { doc, setDoc } from "firebase/firestore";
 
 export default function Signup({ navigation }) {
   // Form state
-  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,7 +23,7 @@ export default function Signup({ navigation }) {
       alert('You must agree to the Terms of Use and Privacy Policy');
       return;
     }
-    if (!username || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword) {
       alert('Please fill all fields');
       return;
     }
@@ -39,7 +39,7 @@ export default function Signup({ navigation }) {
 
       // 2️⃣ Save extra info to Firestore
       await setDoc(doc(db, 'users', user.uid), {
-        username,
+        fullName,
         email,
         role,
         createdAt: new Date(),
@@ -69,10 +69,10 @@ export default function Signup({ navigation }) {
       {/* Form Fields */}
       <TextInput
         style={styles.input}
-        placeholder="Username"
+        placeholder="Full Name"
         placeholderTextColor="#555"
-        value={username}
-        onChangeText={setUsername}
+        value={fullName}
+        onChangeText={setFullName}
       />
       <TextInput
         style={styles.input}
