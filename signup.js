@@ -70,12 +70,14 @@ export default function Signup({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Username"
+        placeholderTextColor="#555"
         value={username}
         onChangeText={setUsername}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#555"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -83,6 +85,7 @@ export default function Signup({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#555"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -90,6 +93,7 @@ export default function Signup({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
+        placeholderTextColor="#555"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
@@ -101,11 +105,13 @@ export default function Signup({ navigation }) {
         <Picker
           selectedValue={role}
           onValueChange={(itemValue) => setRole(itemValue)}
-          style={styles.picker}
+          style={[styles.picker, { color: '#555' }]}   // picker text color
+          itemStyle={{ color: '#555' }}                // dropdown item color
         >
           <Picker.Item label="Parent" value="Parent" />
           <Picker.Item label="Caregiver" value="Caregiver" />
         </Picker>
+
       </View>
 
       {/* Custom Checkbox with clickable Terms */}
@@ -138,6 +144,12 @@ export default function Signup({ navigation }) {
       <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.loginText}>Already have an account? <Text style={styles.loginLink}>Login</Text>
+        </Text>
+      </TouchableOpacity>
+
     </View>
   );
 }
@@ -236,4 +248,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  loginText: {
+  marginTop: 20,
+  fontSize: 15,
+  color: '#555',
+  textAlign: 'center',
+},
+
+loginLink: {
+  color: '#a34f9f',
+  fontWeight: 'bold',
+},
+
 });

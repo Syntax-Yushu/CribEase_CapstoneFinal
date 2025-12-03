@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { auth, db } from './firebase';
@@ -90,6 +90,7 @@ export default function Login({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Username or Email"
+        placeholderTextColor="#555"
         value={identifier}
         onChangeText={setIdentifier}
       />
@@ -98,6 +99,7 @@ export default function Login({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#555"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -112,6 +114,12 @@ export default function Login({ navigation }) {
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>{loading ? 'Logging in...' : 'Login'}</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+        <Text style={styles.signupText}>Don’t have an account? <Text style={styles.signupLink}>Sign up</Text>
+        </Text>
+      </TouchableOpacity>
+
     </View>
   );
 }
@@ -169,4 +177,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  signupText: {
+  marginTop: 20,
+  fontSize: 15,
+  color: '#555',
+  textAlign: 'center',
+},
+
+signupLink: {
+  color: '#a34f9f',
+  fontWeight: 'bold',
+},
+
 });
