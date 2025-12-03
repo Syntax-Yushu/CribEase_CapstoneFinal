@@ -1,9 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { signOut } from 'firebase/auth';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
 import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 export default function More() {
+  const navigation = useNavigation();
   const [username, setUsername] = useState('');
 
   useEffect(() => {
@@ -36,6 +39,32 @@ export default function More() {
           <Text style={styles.greeting}>Hi, {username}</Text>
         </View>
       )}
+
+      {/* NEW OPTIONS */}
+      <View style={styles.menuContainer}>
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuText}>Account Settings</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuText}>Help & Support</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuText}>Settings & Privacy</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={async () => {
+            await signOut(auth);
+            navigation.replace('HomePage'); // ← your homepage.js screen name
+          }}
+        >
+          <Text style={[styles.menuText, { color: 'red' }]}>Logout</Text>
+        </TouchableOpacity>
+
+      </View>
     </View>
   );
 }
@@ -49,6 +78,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginTop: 40,
+    marginBottom: 40,
   },
   avatar: {
     width: 100,
@@ -68,5 +98,19 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
     color: '#a34f9f',
+  },
+
+  // NEW MENU STYLES
+  menuContainer: {
+    marginTop: 20,
+  },
+  menuItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  menuText: {
+    fontSize: 20,
+    color: '#333',
   },
 });

@@ -61,10 +61,10 @@ const tempIsBad = data.temperature > 37.5;
           </Text>
         </View>
 
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Text style={styles.label}>Distance</Text>
           <Text style={styles.value}>{data.distance.toFixed(1)} cm</Text>
-        </View>
+        </View> */}
 
         <View style={styles.card}>
           <Text style={styles.label}>Fall Count</Text>
