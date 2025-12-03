@@ -1,9 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Image } from 'react-native';
 
 export default function HomePage({navigation}) {
   return (
     <View style={styles.container}>
+      <Image 
+        source={require('./assets/baby.png')} 
+        style={{ width: 250, height: 250, marginBottom: -10 }}
+        resizeMode="contain"
+      />
+
       <Text style={[styles.title, { marginBottom: 5 }]}>Welcome To</Text>
       <Text style={[styles.title, { fontSize: 70 }]}>CribEase</Text>
 
