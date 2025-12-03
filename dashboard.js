@@ -25,7 +25,9 @@ export default function Dashboard() {
 
     return () => unsubscribe();
   }, []);
-
+const tempIsBad = data.temperature > 37.5;
+    const soundIsBad = data.sound === 'Crying';
+    const fallIsBad = data.fallStatus === 'Absent';
   return (
     <View style={styles.container}>
       {/* FIXED TITLE */}
@@ -34,23 +36,29 @@ export default function Dashboard() {
       {/* SCROLLABLE CONTENT */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-          <Text style={styles.label}>Temperature</Text>
-          <Text style={styles.value}>{data.temperature.toFixed(1)}°C</Text>
+          <Text style={styles.label}>Baby Temperature</Text>
+          <Text style={[styles.value, tempIsBad && styles.red]}>
+            {data.temperature.toFixed(1)}°C
+          </Text>
         </View>
 
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Text style={styles.label}>Humidity</Text>
           <Text style={styles.value}>{data.humidity.toFixed(1)}%</Text>
+        </View> */}
+
+        <View style={styles.card}>
+          <Text style={styles.label}>Environmental Log</Text>
+          <Text style={[styles.value, soundIsBad && styles.red]}>
+            {data.sound}
+          </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Sound Level</Text>
-          <Text style={styles.value}>{data.sound}</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>Baby Status</Text>
-          <Text style={styles.value}>{data.fallStatus}</Text>
+          <Text style={styles.label}>Fall Detection</Text>
+          <Text style={[styles.value, fallIsBad && styles.red]}>
+            {data.fallStatus}
+          </Text>
         </View>
 
         <View style={styles.card}>
@@ -100,4 +108,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4d148c',
   },
+  red: {
+  color: 'red',
+},
+
 });
