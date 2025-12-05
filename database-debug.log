@@ -2,6 +2,5 @@ WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
 WARNING: sun.misc.Unsafe::objectFieldOffset has been called by akka.util.Unsafe (file:/C:/Users/ACER%20i5%204th%20Gen/.cache/firebase/emulators/firebase-database-emulator-v4.11.2.jar)
 WARNING: Please consider reporting this to the maintainers of class akka.util.Unsafe
 WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-09:36:16.460 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-09:36:16.842 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
-09:39:05.537 [NamespaceSystem-akka.actor.default-dispatcher-9] INFO com.firebase.core.namespace.NamespaceActor - esp32-connecttest successfully activated FBKV (SurveyIdle(0)) wait: 374ms, init: 0ms
+10:38:47.651 [NamespaceSystem-akka.actor.default-dispatcher-6] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
+10:38:48.184 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000

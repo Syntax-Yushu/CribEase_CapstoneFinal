@@ -5,7 +5,7 @@ import { auth } from './firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 export default function Login({ navigation }) {
-  const [email, setEmail] = useState(''); // Only email now
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +18,6 @@ export default function Login({ navigation }) {
 
     setLoading(true);
     try {
-      // Sign in directly using email
       await signInWithEmailAndPassword(auth, email, password);
       alert('Login successful!');
       navigation.navigate('TabNavigation');
@@ -59,25 +58,31 @@ export default function Login({ navigation }) {
       <Text style={styles.title}>SIGN IN</Text>
       <Text style={styles.subtitle}>TO CONTINUE</Text>
 
-      {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#555"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+      {/* Email Input with Icon */}
+      <View style={styles.inputContainer}>
+        <Ionicons name="mail-outline" size={20} color="#a34f9f" style={styles.icon} />
+        <TextInput
+          style={styles.inputWithIcon}
+          placeholder="Email"
+          placeholderTextColor="#555"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+      </View>
 
-      {/* Password */}
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#555"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      {/* Password Input with Icon */}
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={20} color="#a34f9f" style={styles.icon} />
+        <TextInput
+          style={styles.inputWithIcon}
+          placeholder="Password"
+          placeholderTextColor="#555"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+      </View>
 
       {/* Forgot Password */}
       <TouchableOpacity onPress={handleForgotPassword}>
@@ -126,13 +131,24 @@ const styles = StyleSheet.create({
     color: '#a34f9f',
     marginBottom: 30,
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
     borderWidth: 1,
     borderColor: '#a34f9f',
     borderRadius: 10,
-    padding: 12,
+    paddingHorizontal: 10,
     marginVertical: 8,
+  },
+  icon: {
+    marginRight: 10,
+  },
+  inputWithIcon: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#000',
   },
   forgotText: {
     alignSelf: 'flex-end',
