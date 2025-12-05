@@ -4,11 +4,11 @@
     "slug": "CribEase",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/cribease.png",
+    "icon": "./assets/baby.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/cribease.png",
+      "image": "./assets/baby.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/cribease.png",
+        "foregroundImage": "./assets/baby.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

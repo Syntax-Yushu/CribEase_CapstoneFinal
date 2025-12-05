@@ -1,44 +1,59 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Animated, Easing } from 'react-native';
-import { useEffect, useRef } from 'react';
-import { Image } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 
 export default function HomePage({ navigation }) {
-  const dropAnim = useRef(new Animated.Value(-300)).current; // start above the screen
-  const bounceCount = useRef(0);
+  const riseAnim = useRef(new Animated.Value(50)).current; // start slightly below
+  const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  const [welcomeText, setWelcomeText] = useState('');
+  const fullText = "Welcome To";
+
+  // Typing effect for "Welcome To"
   useEffect(() => {
-    const dropAndBounce = () => {
-      Animated.timing(dropAnim, {
-        toValue: 0, // drop to "Welcome To" position
-        duration: 1000,
-        easing: Easing.bounce,
-        useNativeDriver: true,
-      }).start(() => {
-        bounceCount.current += 1;
-        if (bounceCount.current < 3) {
-        }
-      });
-    };
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      setWelcomeText(fullText.slice(0, currentIndex + 1));
+      currentIndex++;
+      if (currentIndex === fullText.length) clearInterval(typingInterval);
+    }, 150); // typing speed in ms
 
-    dropAndBounce();
+    return () => clearInterval(typingInterval);
+  }, []);
+
+  // Logo rising animation
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(riseAnim, {
+        toValue: 0,
+        duration: 2000,
+        easing: Easing.out(Easing.exp),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   return (
     <View style={styles.container}>
+      <Text style={[styles.title, { marginBottom: -60 }]}>{welcomeText}</Text>
+
       <Animated.Image
-        source={require('./assets/baby.png')}
+        source={require('./assets/cribease.png')}
         style={{
-          width: 250,
-          height: 250,
-          marginBottom: -10,
-          transform: [{ translateY: dropAnim }],
+          width: 350,
+          height: 300,
+          tintColor: '#a34f9f',
+          marginBottom: -40,
+          transform: [{ translateY: riseAnim }],
+          opacity: opacityAnim,
         }}
         resizeMode="contain"
       />
-
-      <Text style={[styles.title, { marginBottom: 5 }]}>Welcome To</Text>
-      <Text style={[styles.title, { fontSize: 70 }]}>CribEase</Text>
 
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.buttonText}>Login</Text>
@@ -62,8 +77,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 25,
     fontWeight: 'bold',
-    marginBottom: 40,
     color: '#a34f9f',
+    marginBottom: 0,
   },
   button: {
     backgroundColor: '#a34f9f',

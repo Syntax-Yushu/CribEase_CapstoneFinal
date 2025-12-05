@@ -36,7 +36,7 @@ export default function More() {
             </Text>
           </View>
 
-          <Text style={styles.greeting}>Hi, {fullName}</Text>
+          <Text style={styles.greeting}>Hi, {fullName}!</Text>
         </View>
       )}
 

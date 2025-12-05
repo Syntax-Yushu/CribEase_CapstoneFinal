@@ -37,6 +37,7 @@ export default function Logo({ navigation }) {
           {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
+            tintColor: '#a34f9f',
           },
         ]}
         resizeMode="contain"
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 300,
+    width: 350,
     height: 300,
   },
 });
