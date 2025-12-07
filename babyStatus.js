@@ -2,12 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function SleepPattern({ route, navigation }) {
-  const { sleepHistory } = route.params;
+export default function BabyStatus({ route, navigation }) {
+  // Receive filtered history from Dashboard
+  const { soundHistory } = route.params;
 
   return (
     <View style={styles.container}>
-      {/* Back Arrow */}
+      {/* Back Button */}
       <TouchableOpacity 
         style={styles.backButton} 
         onPress={() => navigation.goBack()}
@@ -15,18 +16,17 @@ export default function SleepPattern({ route, navigation }) {
         <Ionicons name="arrow-undo-outline" size={35} color="#a34f9f" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Sleep Pattern</Text>
-
+      <Text style={styles.title}>Baby Status</Text>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {sleepHistory && sleepHistory.length > 0 ? (
-          sleepHistory.map((record, index) => (
-            <View key={index} style={styles.recordRow}>
-              <Text style={styles.value}>{record.value}</Text>
-              <Text style={styles.time}>{record.time}</Text>
+        {soundHistory.length === 0 ? (
+          <Text style={styles.noData}>No crying events recorded</Text>
+        ) : (
+          soundHistory.map((item, index) => (
+            <View key={index} style={styles.card}>
+              <Text style={styles.label}>Status: {item.value}</Text>
+              <Text style={styles.time}>Time: {item.time}</Text>
             </View>
           ))
-        ) : (
-          <Text style={styles.noRecord}>No sleep pattern records yet.</Text>
         )}
       </ScrollView>
     </View>
@@ -37,8 +37,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 70,
-    paddingHorizontal: 20,
   },
   backButton: {
     position: 'absolute',
@@ -47,34 +45,33 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#a34f9f',
-    marginTop: 30,
-    marginBottom: 20,
+    marginTop: 100,
+    marginBottom: 40,
     textAlign: 'center',
   },
   scrollContent: {
+    paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  recordRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  card: {
     backgroundColor: '#f3e6f7',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 10,
   },
-  value: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  label: {
+    fontSize: 16,
     color: '#4d148c',
+    marginBottom: 5,
   },
   time: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#555',
   },
-  noRecord: {
+  noData: {
     fontSize: 16,
     color: '#555',
     textAlign: 'center',

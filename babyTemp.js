@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function SleepPattern({ route, navigation }) {
-  const { sleepHistory } = route.params;
+export default function BabyTemp({ route, navigation }) {
+  const { temperatureHistory } = route.params;
 
   return (
     <View style={styles.container}>
@@ -15,18 +15,18 @@ export default function SleepPattern({ route, navigation }) {
         <Ionicons name="arrow-undo-outline" size={35} color="#a34f9f" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Sleep Pattern</Text>
+      <Text style={styles.title}>Baby Temperature</Text>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {sleepHistory && sleepHistory.length > 0 ? (
-          sleepHistory.map((record, index) => (
-            <View key={index} style={styles.recordRow}>
-              <Text style={styles.value}>{record.value}</Text>
-              <Text style={styles.time}>{record.time}</Text>
+        {temperatureHistory && temperatureHistory.length > 0 ? (
+          temperatureHistory.map((record, index) => (
+            <View key={index} style={styles.recordCard}>
+              <Text style={styles.recordValue}>{record.value.toFixed(1)}°C</Text>
+              <Text style={styles.recordTime}>{record.time}</Text>
             </View>
           ))
         ) : (
-          <Text style={styles.noRecord}>No sleep pattern records yet.</Text>
+          <Text style={styles.noRecord}>No temperature records yet.</Text>
         )}
       </ScrollView>
     </View>
@@ -57,20 +57,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
-  recordRow: {
+  recordCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     backgroundColor: '#f3e6f7',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 10,
   },
-  value: {
-    fontSize: 20,
+  recordValue: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#4d148c',
   },
-  time: {
+  recordTime: {
     fontSize: 16,
     color: '#555',
   },

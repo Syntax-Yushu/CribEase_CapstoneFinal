@@ -31,7 +31,7 @@ export default function Logo({ navigation }) {
   return (
     <View style={styles.container}>
       <Animated.Image
-        source={require('./assets/cribease.png')}
+        source={require('./assets/babylogo.png')}
         style={[
           styles.logo,
           {

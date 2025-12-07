@@ -16,8 +16,11 @@ import TabNavigation from './tabs';
 import History from './history';
 import NotificationsScreen from './notifications';
 import More from './more';
-import SleepPattern from './sleepPattern';
 import Device from './device';
+import BabyTemp from './babyTemp';
+import BabyStatus from './babyStatus';
+import SleepPattern from './sleepPattern';
+import FallDetection from './fallDetection';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,8 +50,11 @@ export default function App() {
         <Stack.Screen name="History" component={History} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="More" component={More} />
-        <Stack.Screen name="SleepPattern" component={SleepPattern} />
         <Stack.Screen name="Device" component={Device} />
+        <Stack.Screen name="BabyTemp" component={BabyTemp} />
+        <Stack.Screen name="BabyStatus" component={BabyStatus} />
+        <Stack.Screen name="SleepPattern" component={SleepPattern} />
+        <Stack.Screen name="FallDetection" component={FallDetection} />
       </Stack.Navigator>
     </NavigationContainer>
   );
