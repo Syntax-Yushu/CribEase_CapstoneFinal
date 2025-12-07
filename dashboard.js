@@ -229,21 +229,46 @@ export default function Dashboard({ navigation }) {
         </TouchableOpacity>
 
         {/* Fall Detection */}
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('FallDetection', { fallHistory: data.fallHistory.filter(item => item.value === 'Absent') })}
-        >
-          <View style={styles.row}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={22} color={fallIsBad ? 'red' : '#4d148c'} style={styles.icon} />
-            <View style={styles.cardContent}>
-              <Text style={styles.label}>Fall Detection</Text>
-              <Text style={[styles.value, fallIsBad && styles.red]}>
-                {data.fallStatus}
-              </Text>
-            </View>
-            {renderFilteredHistory(data.fallHistory, 'Absent')}
-          </View>
-        </TouchableOpacity>
+<TouchableOpacity
+  style={styles.card}
+  onPress={() =>
+    navigation.navigate("FallDetection", {
+      fallHistory: data.fallHistory,
+      fallCount: data.fallCount,
+    })
+  }
+>
+  <View style={styles.row}>
+    <MaterialCommunityIcons
+      name="alert-circle-outline"
+      size={22}
+      color={data.fallStatus === "Absent" ? "red" : "#4d148c"}
+      style={styles.icon}
+    />
+
+    {/* LEFT SECTION (Title + Status) */}
+    <View style={{ flex: 1 }}>
+      <Text style={styles.label}>Fall Detection</Text>
+
+      <Text
+        style={[
+          styles.value,
+          data.fallStatus === "Absent" && styles.red,
+        ]}
+      >
+        {data.fallStatus}
+      </Text>
+    </View>
+
+    {/* RIGHT SIDE — TOTAL FALLS */}
+    <View style={{ justifyContent: "center", alignItems: "flex-end" }}>
+      <Text style={styles.fallCountRight}>Total Falls</Text>
+      <Text style={styles.fallCountNumber}>{data.fallCount}</Text>
+    </View>
+  </View>
+</TouchableOpacity>
+
+
 
       </ScrollView>
     </View>
@@ -310,4 +335,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
   },
+  fallCountRight: {
+  fontSize: 14,
+  color: "#555",
+  fontWeight: "500",
+},
+
+fallCountNumber: {
+  fontSize: 20,
+  fontWeight: "bold",
+  color: "#4d148c",
+  marginTop: 2,
+},
+
+
 });
