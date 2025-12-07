@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { database } from './firebase';
 import { ref, query, limitToLast, onValue } from 'firebase/database';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function SleepPattern() {
+export default function SleepPattern({navigation}) {
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#a34f9f',
     marginTop: 70,
-    marginBottom: 20,
+    marginBottom: 40,
     textAlign: 'center',
   },
   scrollContent: {
@@ -78,4 +79,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
   },
+  backButton: { position: 'absolute', top: 50, left: 20, zIndex: 1 },
 });

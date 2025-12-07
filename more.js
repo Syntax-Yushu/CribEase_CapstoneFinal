@@ -81,9 +81,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
+    width: 150,
+    height: 150,
+    borderRadius: 150,
     backgroundColor: '#a34f9f',
     justifyContent: 'center',
     alignItems: 'center',
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: '#fff',
-    fontSize: 70,
+    fontSize: 100,
     fontWeight: 'bold',
   },
   greeting: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   menuItem: {
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#a34f9f',
   },
   menuText: {
     fontSize: 20,

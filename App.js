@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+//import * as Permissions from 'expo-permissions'
+
 
 import Logo from './logo';
 import HomePage from './homePage';
@@ -15,6 +17,7 @@ import History from './history';
 import NotificationsScreen from './notifications';
 import More from './more';
 import SleepPattern from './sleepPattern';
+import Device from './device';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +48,7 @@ export default function App() {
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="More" component={More} />
         <Stack.Screen name="SleepPattern" component={SleepPattern} />
+        <Stack.Screen name="Device" component={Device} />
       </Stack.Navigator>
     </NavigationContainer>
   );

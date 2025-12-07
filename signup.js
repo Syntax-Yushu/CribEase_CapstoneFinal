@@ -15,7 +15,7 @@ export default function Signup({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [birthdate, setBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [role, setRole] = useState('Parent');
+  const [role, setRole] = useState('');
   const [agree, setAgree] = useState(false);
 
   const onChangeDate = (event, selectedDate) => {
@@ -130,17 +130,19 @@ export default function Signup({ navigation }) {
       {/* Role Picker with icon */}
       <Text style={styles.label}>Choose a Role</Text>
       <View style={[styles.inputContainer, { paddingHorizontal: 5 }]}>
-        <Ionicons name="person-circle-outline" size={20} color="#a34f9f" style={styles.icon} />
-        <Picker
-          selectedValue={role}
-          onValueChange={(itemValue) => setRole(itemValue)}
-          style={[styles.picker, { flex: 1 }]}
-          itemStyle={{ color: '#555' }}
-        >
-          <Picker.Item label="Parent" value="Parent" />
-          <Picker.Item label="Caregiver" value="Caregiver" />
-        </Picker>
-      </View>
+  <Ionicons name="person-circle-outline" size={20} color="#a34f9f" style={styles.icon} />
+  
+  <Picker
+    selectedValue={role}
+    onValueChange={(itemValue) => setRole(itemValue)}
+    style={[styles.picker, { flex: 1 }]}
+    dropdownIconColor="#a34f9f"     // optional, makes arrow visible
+  >
+    <Picker.Item label="Parent" value="Parent" color="#000" />
+    <Picker.Item label="Caregiver" value="Caregiver" color="#000" />
+  </Picker>
+</View>
+
 
       {/* Terms Checkbox */}
       <TouchableOpacity style={styles.checkboxContainer} onPress={() => setAgree(!agree)}>

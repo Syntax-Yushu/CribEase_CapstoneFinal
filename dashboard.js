@@ -9,13 +9,13 @@ import Constants from 'expo-constants';
 export default function Dashboard({ navigation }) {
   const [data, setData] = useState({
     temperature: 0,
-    sleepStatus: 'Asleep',
-    sleepTime: '',
+    sleepStatus: 'Unknown',
     sound: 'Quiet',
     fallStatus: 'Absent',
     fallCount: 0,
   });
 
+  const [deviceId, setDeviceId] = useState('Unknown Device');
   const [expoPushToken, setExpoPushToken] = useState('');
 
   // Configure notification handler
@@ -32,24 +32,40 @@ export default function Dashboard({ navigation }) {
     registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
   }, []);
 
-  // Listen to Firebase sensor updates
+  // Listen to Firebase devices updates
   useEffect(() => {
-    const sensorRef = ref(database, '/sensor');
+    const devicesRef = ref(database, '/devices');
 
-    const unsubscribe = onValue(sensorRef, (snapshot) => {
+    const unsubscribe = onValue(devicesRef, (snapshot) => {
       if (snapshot.exists()) {
-        const newData = snapshot.val();
-        setData(newData);
+        const devicesData = snapshot.val();
+        // Pick first device for simplicity
+        const firstDeviceKey = Object.keys(devicesData)[0];
+        const firstDeviceSensor = devicesData[firstDeviceKey]?.sensor;
 
-        // Trigger notifications for alerts
-        if (newData.temperature > 37.5) {
-          sendPushNotification('High temperature detected: ' + newData.temperature.toFixed(1) + '°C');
-        }
-        if (newData.sound === 'Crying') {
-          sendPushNotification('Baby is crying!');
-        }
-        if (newData.fallStatus === 'Detected') {
-          sendPushNotification('Fall detected!');
+        if (firstDeviceSensor) {
+          setDeviceId(firstDeviceKey); // Display device ID
+
+          const mappedData = {
+            temperature: firstDeviceSensor.temperature || 0,
+            sleepStatus: firstDeviceSensor.sleepPattern || 'Unknown',
+            sound: firstDeviceSensor.sound || 'Quiet',
+            fallStatus: firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent',
+            fallCount: firstDeviceSensor.fallCount || 0,
+          };
+
+          setData(mappedData);
+
+          // Trigger notifications
+          if (mappedData.temperature > 37.5) {
+            sendPushNotification(`High temperature detected: ${mappedData.temperature.toFixed(1)}°C`);
+          }
+          if (mappedData.sound === 'Crying') {
+            sendPushNotification('Baby is crying!');
+          }
+          if (mappedData.fallStatus === 'Absent') {
+            sendPushNotification('Fall absent!');
+          }
         }
       }
     });
@@ -57,7 +73,7 @@ export default function Dashboard({ navigation }) {
     return () => unsubscribe();
   }, [expoPushToken]);
 
-  // Helper function to send push notification
+  // Push notification helper
   const sendPushNotification = async (message) => {
     if (!expoPushToken) return;
 
@@ -117,14 +133,15 @@ export default function Dashboard({ navigation }) {
   // Threshold checks for UI colors
   const tempIsBad = data.temperature > 37.5;
   const sleepIsBad = data.sleepStatus === 'Awake';
-  const fallIsBad = data.fallStatus === 'Detected';
   const soundIsBad = data.sound === 'Crying';
+  const fallIsBad = data.fallStatus === 'Absent'; // red if Absent
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>CribEase Dashboard</Text>
+      <Text style={styles.deviceId}>Device ID: {deviceId}</Text>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Baby Temperature */}
         <View style={styles.card}>
           <Text style={styles.label}>Baby Temperature</Text>
@@ -147,17 +164,6 @@ export default function Dashboard({ navigation }) {
           </View>
         </View>
 
-        {/* Environmental Log */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Environmental Log</Text>
-          <View style={styles.row}>
-            <Entypo name="sound" size={22} color="#4d148c" style={styles.icon} />
-            <Text style={styles.value}>
-              Noisy
-            </Text>
-          </View>
-        </View>
-
         {/* Sleep Pattern */}
         <TouchableOpacity
           style={styles.card}
@@ -166,9 +172,8 @@ export default function Dashboard({ navigation }) {
           <Text style={styles.label}>Sleep Pattern</Text>
           <View style={styles.row}>
             <FontAwesome name="bed" size={22} color={sleepIsBad ? 'red' : '#4d148c'} style={styles.icon} />
-            <Text style={styles.value}>{data.sleepStatus}</Text>
+            <Text style={[styles.value, sleepIsBad && styles.red]}>{data.sleepStatus}</Text>
           </View>
-          {data.sleepTime ? <Text style={styles.time}>{data.sleepTime}</Text> : null}
         </TouchableOpacity>
 
         {/* Fall Detection */}
@@ -197,8 +202,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#a34f9f',
     marginTop: 70,
-    marginBottom: 40,
+    marginBottom: 5,
     textAlign: 'center',
+  },
+  deviceId: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -219,11 +230,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#4d148c',
-  },
-  time: {
-    fontSize: 14,
-    color: '#555',
-    marginTop: 5,
   },
   red: {
     color: 'red',
