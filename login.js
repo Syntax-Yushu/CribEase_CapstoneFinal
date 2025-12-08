@@ -11,12 +11,20 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 👁️ New state for password visibility
+  // 👁️ Password visibility state
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
+    // Check empty fields
     if (!email || !password) {
       alert('Please fill all fields');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('Please enter a valid email');
       return;
     }
 
@@ -41,7 +49,20 @@ export default function Login({ navigation }) {
       }
     } catch (error) {
       console.error(error);
-      alert(error.message);
+      // Custom alert messages
+      switch (error.code) {
+        case 'auth/wrong-password':
+          alert('Incorrect password. Please try again.');
+          break;
+        case 'auth/user-not-found':
+          alert('No account found with this email.');
+          break;
+        case 'auth/invalid-email':
+          alert('Invalid email format.');
+          break;
+        default:
+          alert('Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }

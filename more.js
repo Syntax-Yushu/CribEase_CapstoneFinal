@@ -104,7 +104,7 @@ export default function More() {
             <Text style={[styles.boxButtonText, { color: '#fff' }]}>Remove Device</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.boxButton, { backgroundColor: 'red' }]} onPress={handleLogout}>
+          <TouchableOpacity style={[styles.boxButton, { backgroundColor: '#4f9fa3' }]} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#fff" style={styles.boxIcon} />
             <Text style={[styles.boxButtonText, { color: '#fff' }]}>Logout</Text>
           </TouchableOpacity>

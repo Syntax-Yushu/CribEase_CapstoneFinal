@@ -72,6 +72,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, color: '#a34f9f', fontWeight: 'bold', textAlign: 'center', marginBottom: 30 },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 12, padding: 15, marginBottom: 20, fontSize: 16 },
   addButton: { backgroundColor: '#a34f9f', padding: 15, borderRadius: 12, alignItems: 'center', marginBottom: 15 },
-  logoutButton: { backgroundColor: 'red', padding: 15, borderRadius: 12, alignItems: 'center' },
+  logoutButton: { backgroundColor: '#4f9fa3', padding: 15, borderRadius: 12, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
 });
