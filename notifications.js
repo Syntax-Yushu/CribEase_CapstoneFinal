@@ -1,117 +1,131 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { database } from './firebase';
 import { ref, onValue } from 'firebase/database';
-import { FontAwesome, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
+import { database } from './firebase';
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState([]);
+  const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    const sensorRef = ref(database, '/sensor');
+    const statusRef = ref(database, 'Crib/status');
+    const tempRef = ref(database, 'Crib/environment/temperature');
+    const fallRef = ref(database, 'Crib/fallCount');
 
-    const unsubscribe = onValue(sensorRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const alerts = [];
+    let lastFallCount = 0;
 
-        const currentTime = new Date().toLocaleString(); // local timestamp
+    // LISTEN FOR FALL & ABSENT STATUS
+    onValue(statusRef, (snapshot) => {
+      const status = snapshot.val();
 
-        // Temperature alert
-        if (data.temperature > 37.5) {
-          alerts.push({
-            type: 'Temperature',
-            message: `High temperature detected: ${data.temperature.toFixed(1)}°C`,
-            time: currentTime,
-            icon: <FontAwesome name="thermometer-half" size={20} color="red" />,
-          });
-        }
+      if (status === "Absent") {
+        addAlert("Baby is absent from crib!", "high");
+      }
 
-        // Sound alert
-        if (data.sound === 'Crying') {
-          alerts.push({
-            type: 'Sound',
-            message: 'Baby is crying!',
-            time: currentTime,
-            icon: <Entypo name="sound" size={20} color="red" />,
-          });
-        }
-
-        // Fall detection alert
-        if (data.fallStatus === 'Detected') {
-          alerts.push({
-            type: 'Fall',
-            message: 'Fall detected!',
-            time: currentTime,
-            icon: <MaterialCommunityIcons name="human-falling" size={20} color="red" />,
-          });
-        }
-
-        setNotifications(alerts);
+      if (status === "Fall Detected") {
+        addAlert("Fall detected! Immediate attention required!", "critical");
       }
     });
 
-    return () => unsubscribe();
+    // LISTEN FOR TEMPERATURE CHANGES
+    onValue(tempRef, (snapshot) => {
+      const temp = snapshot.val();
+
+      if (temp === null) return;
+
+      if (temp > 37.5) {
+        addAlert(`High Temperature: ${temp}°C`, "high");
+      } else if (temp < 35.5) {
+        addAlert(`Low Temperature: ${temp}°C`, "low");
+      }
+    });
+
+    // LISTEN FOR FALL COUNT INCREASE
+    onValue(fallRef, (snapshot) => {
+      const fallCount = snapshot.val() || 0;
+
+      if (fallCount > lastFallCount) {
+        addAlert("Possible fall movement detected!", "medium");
+      }
+      lastFallCount = fallCount;
+    });
+
   }, []);
 
+  // ADD ALERT FUNCTION
+  const addAlert = (msg, level) => {
+    const timestamp = new Date().toLocaleString();
+
+    const newAlert = {
+      id: Date.now().toString(),
+      message: msg,
+      level: level,
+      time: timestamp,
+    };
+
+    setAlerts((prev) => [newAlert, ...prev]); // newest on top
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Notifications</Text>
-      {notifications.length === 0 ? (
-        <Text style={styles.empty}>No notifications</Text>
-      ) : (
-        notifications.map((item, index) => (
-          <View key={index} style={styles.card}>
-            <View style={styles.row}>
-              {item.icon}
-              <View style={{ marginLeft: 10 }}>
-                <Text style={styles.message}>{item.message}</Text>
-                <Text style={styles.time}>{item.time}</Text>
-              </View>
-            </View>
+
+      <ScrollView style={styles.scrollArea}>
+        {alerts.length === 0 && (
+          <Text style={styles.noAlert}>No alerts yet.</Text>
+        )}
+
+        {alerts.map((alert) => (
+          <View key={alert.id} style={styles.alertItem}>
+            <Text style={styles.alertMessage}>{alert.message}</Text>
+            <Text style={styles.alertTime}>{alert.time}</Text>
           </View>
-        ))
-      )}
-    </ScrollView>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
+// STYLES
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    paddingTop: 50,
+    flex: 1,
     backgroundColor: '#fff',
+    padding: 20,
+    paddingTop: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#a34f9f',
-    marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 15,
+    marginTop: 30,
     textAlign: 'center',
   },
-  empty: {
-    textAlign: 'center',
-    color: '#555',
-    marginTop: 20,
+  scrollArea: {
+    marginTop: 10,
   },
-  card: {
-    backgroundColor: '#fce4ec',
+  noAlert: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  alertItem: {
+    backgroundColor: '#f2e4f5',
     padding: 15,
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 10,
+    borderLeftWidth: 6,
+    borderLeftColor: '#a34f9f',
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  message: {
+  alertMessage: {
     fontSize: 16,
-    color: '#4d148c',
+    fontWeight: '600',
   },
-  time: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 2,
+  alertTime: {
+    fontSize: 13,
+    color: '#555',
+    marginTop: 5,
   },
 });
+
