@@ -28,11 +28,26 @@ export default function Signup({ navigation }) {
   };
 
   const handleRegister = async () => {
+    // ✅ Check if agreed
     if (!agree) { alert('You must agree to the Terms of Use and Privacy Policy'); return; }
-    if (!fullName || !email || !password || !confirmPassword || !birthdate || !gender || !role) {
+    
+    // ✅ Check if all required fields are filled
+    if (!fullName || !email || !password || !confirmPassword || !birthdate) {
       alert('Please fill all fields'); return;
     }
+
+    // ✅ Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('Please enter a valid email'); return;
+    }
+
+    // ✅ Check password match
     if (password !== confirmPassword) { alert('Passwords do not match'); return; }
+
+    // ✅ Check gender and role selection
+    if (!gender) { alert('Please select your gender'); return; }
+    if (!role) { alert('Please select your role'); return; }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
