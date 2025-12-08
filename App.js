@@ -22,6 +22,7 @@ import BabyStatus from './babyStatus';
 import SleepPattern from './sleepPattern';
 import FallDetection from './fallDetection';
 import AddDevice from './addDevice';
+import AccountSettings from './accountSettings';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +58,7 @@ export default function App() {
         <Stack.Screen name="SleepPattern" component={SleepPattern} />
         <Stack.Screen name="FallDetection" component={FallDetection} />
         <Stack.Screen name="AddDevice" component={AddDevice} />
+        <Stack.Screen name="AccountSettings" component={AccountSettings} />
       </Stack.Navigator>
     </NavigationContainer>
   );

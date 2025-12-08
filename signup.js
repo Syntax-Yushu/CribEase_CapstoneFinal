@@ -10,7 +10,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function Signup({ navigation }) {
   const [fullName, setFullName] = useState('');
-  const [gender, setGender] = useState('');
+  //const [gender, setGender] = useState('');
   const [role, setRole] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ export default function Signup({ navigation }) {
     if (password !== confirmPassword) { alert('Passwords do not match'); return; }
 
     // ✅ Check gender and role selection
-    if (!gender) { alert('Please select your gender'); return; }
+    // if (!gender) { alert('Please select your gender'); return; }
     if (!role) { alert('Please select your role'); return; }
 
     try {
@@ -56,7 +56,7 @@ export default function Signup({ navigation }) {
       await setDoc(doc(db, 'users', user.uid), {
         fullName,
         email,
-        gender,
+        //gender,
         role,
         birthdate: birthdate.toISOString().split('T')[0],
         deviceID: null,
@@ -172,7 +172,7 @@ export default function Signup({ navigation }) {
         )}
 
         {/* GENDER */}
-        <View style={[styles.inputContainer, { paddingHorizontal: 5 }]}>
+        {/* <View style={[styles.inputContainer, { paddingHorizontal: 5 }]}>
           <Ionicons name="male-female-outline" size={20} color="#a34f9f" style={styles.icon} />
           <Picker
             selectedValue={gender}
@@ -185,7 +185,7 @@ export default function Signup({ navigation }) {
             <Picker.Item label="Female" value="Female" color="#000" />
             <Picker.Item label="Other" value="Other" color="#000" />
           </Picker>
-        </View>
+        </View> */}
 
         {/* ROLE */}
         <View style={[styles.inputContainer, { paddingHorizontal: 5 }]}>
