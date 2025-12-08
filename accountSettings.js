@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     color: '#a34f9f',
     textAlign: 'center',
     marginBottom: 30,
+    marginTop: 30,
   },
 
   section: {

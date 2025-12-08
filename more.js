@@ -72,9 +72,9 @@ export default function More() {
   };
 
   const menuItems = [
-    { label: 'Account Settings', icon: 'settings-outline', onPress: () => navigation.navigate('AccountSettings') }, // UPDATED
-    { label: 'Help & Support', icon: 'help-circle-outline', onPress: () => {} },
-    { label: 'Settings & Privacy', icon: 'lock-closed-outline', onPress: () => {} },
+    { label: 'Account Settings', icon: 'settings-outline', onPress: () => navigation.navigate('AccountSettings') },
+    { label: 'Help & Support', icon: 'help-circle-outline', onPress: () => navigation.navigate('HelpSupport') },
+    { label: 'Settings & Privacy', icon: 'lock-closed-outline', onPress: () => navigation.navigate('SettingsPrivacy') }, // UPDATED
     { label: 'About Us', icon: 'information-circle-outline', onPress: handleAboutUs },
   ];
 
