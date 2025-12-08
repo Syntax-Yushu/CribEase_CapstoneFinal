@@ -11,6 +11,9 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // 👁️ New state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+
   const handleLogin = async () => {
     if (!email || !password) {
       alert('Please fill all fields');
@@ -26,12 +29,11 @@ export default function Login({ navigation }) {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
+
         if (userData.deviceID) {
-          // Save device locally and go to dashboard
           await AsyncStorage.setItem('deviceID', userData.deviceID);
           navigation.replace('TabNavigation');
         } else {
-          // No device yet → go to AddDevice
           navigation.replace('AddDevice');
         }
       } else {
@@ -66,16 +68,27 @@ export default function Login({ navigation }) {
         />
       </View>
 
+      {/* PASSWORD WITH EYE ICON */}
       <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={20} color="#a34f9f" style={styles.icon} />
+
         <TextInput
           style={styles.inputWithIcon}
           placeholder="Password"
           placeholderTextColor="#555"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={!showPassword}
         />
+
+        {/* 👁 Icon to toggle password visibility */}
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={23}
+            color="#a34f9f"
+          />
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
@@ -83,7 +96,9 @@ export default function Login({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={styles.signupText}>Don’t have an account? <Text style={styles.signupLink}>Sign up</Text></Text>
+        <Text style={styles.signupText}>
+          Don’t have an account? <Text style={styles.signupLink}>Sign up</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
