@@ -27,6 +27,8 @@ import HelpFeedback from './helpFeedback';
 import SettingsPrivacy from './settingsPrivacy';
 import Feedback from './feedback';
 import ViewFeedback from './viewFeedback';
+import Subscription from './subscription';
+import SubscriptionView from './subscriptionview';
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +99,8 @@ export default function App() {
         <Stack.Screen name="SettingsPrivacy" component={SettingsPrivacy} />
         <Stack.Screen name="Feedback" component={Feedback} />
         <Stack.Screen name="ViewFeedback" component={ViewFeedback} />
+        <Stack.Screen name="Subscription" component={Subscription} />
+        <Stack.Screen name="SubscriptionView" component={SubscriptionView} />
       </Stack.Navigator>
     </NavigationContainer>
   );

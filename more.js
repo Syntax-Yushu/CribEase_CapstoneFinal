@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { signOut } from 'firebase/auth';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { auth, db } from './firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -73,49 +73,53 @@ export default function More() {
 
   const menuItems = [
     { label: 'Account Settings', icon: 'settings-outline', onPress: () => navigation.navigate('AccountSettings') },
+    { label: 'Subscription', icon: 'card-outline', onPress: () => navigation.navigate('Subscription') },
     { label: 'Help & Feedback', icon: 'help-circle-outline', onPress: () => navigation.navigate('HelpFeedback') },
-    { label: 'Settings & Privacy', icon: 'lock-closed-outline', onPress: () => navigation.navigate('SettingsPrivacy') }, // UPDATED
+    { label: 'Settings & Privacy', icon: 'lock-closed-outline', onPress: () => navigation.navigate('SettingsPrivacy') },
     { label: 'About Us', icon: 'information-circle-outline', onPress: handleAboutUs },
   ];
 
   return (
-    <View style={styles.container}>
-      {fullName !== '' && (
-        <View style={styles.header}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{fullName.charAt(0).toUpperCase()}</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        {fullName !== '' && (
+          <View style={styles.header}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{fullName.charAt(0).toUpperCase()}</Text>
+            </View>
+            <Text style={styles.greeting}>Hi, {fullName}!</Text>
           </View>
-          <Text style={styles.greeting}>Hi, {fullName}!</Text>
-        </View>
-      )}
+        )}
 
-      <View style={styles.menuContainer}>
-        {menuItems.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
-            <Ionicons name={item.icon} size={24} color="#a34f9f" style={styles.menuIcon} />
-            <Text style={styles.menuText}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
+              <Ionicons name={item.icon} size={24} color="#a34f9f" style={styles.menuIcon} />
+              <Text style={styles.menuText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
 
-        {/* Box Buttons */}
-        <View style={styles.boxContainer}>
-          <TouchableOpacity style={[styles.boxButton, { backgroundColor: '#a34f9f' }]} onPress={handleRemoveDevice}>
-            <Ionicons name="trash-outline" size={24} color="#fff" style={styles.boxIcon} />
-            <Text style={[styles.boxButtonText, { color: '#fff' }]}>Remove Device</Text>
-          </TouchableOpacity>
+          {/* Box Buttons */}
+          <View style={styles.boxContainer}>
+            <TouchableOpacity style={[styles.boxButton, { backgroundColor: '#a34f9f' }]} onPress={handleRemoveDevice}>
+              <Ionicons name="trash-outline" size={24} color="#fff" style={styles.boxIcon} />
+              <Text style={[styles.boxButtonText, { color: '#fff' }]}>Remove Device</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.boxButton, { backgroundColor: '#4f9fa3' }]} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" style={styles.boxIcon} />
-            <Text style={[styles.boxButtonText, { color: '#fff' }]}>Logout</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={[styles.boxButton, { backgroundColor: '#4f9fa3' }]} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={24} color="#fff" style={styles.boxIcon} />
+              <Text style={[styles.boxButtonText, { color: '#fff' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  scrollContainer: { flexGrow: 1, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20 },
   header: { alignItems: 'center', marginTop: 40, marginBottom: 40 },
   avatar: { width: 150, height: 150, borderRadius: 150, backgroundColor: '#a34f9f', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
   avatarText: { color: '#fff', fontSize: 100, fontWeight: 'bold' },
