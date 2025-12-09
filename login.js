@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { auth, db } from './firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -15,13 +15,11 @@ export default function Login({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    // Check empty fields
     if (!email || !password) {
       alert('Please fill all fields');
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       alert('Please enter a valid email');
@@ -33,7 +31,6 @@ export default function Login({ navigation }) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check Firestore for deviceID
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -49,7 +46,6 @@ export default function Login({ navigation }) {
       }
     } catch (error) {
       console.error(error);
-      // Custom alert messages
       switch (error.code) {
         case 'auth/wrong-password':
           alert('Incorrect password. Please try again.');
@@ -65,6 +61,34 @@ export default function Login({ navigation }) {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      alert('Please enter your email to reset password.');
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert(
+        'Reset Email Sent',
+        `A password reset email has been sent to ${email}. Check your inbox.`,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error(error);
+      switch (error.code) {
+        case 'auth/user-not-found':
+          alert('No account found with this email.');
+          break;
+        case 'auth/invalid-email':
+          alert('Invalid email format.');
+          break;
+        default:
+          alert('Failed to send reset email. Try again later.');
+      }
     }
   };
 
@@ -89,10 +113,8 @@ export default function Login({ navigation }) {
         />
       </View>
 
-      {/* PASSWORD WITH EYE ICON */}
       <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={20} color="#a34f9f" style={styles.icon} />
-
         <TextInput
           style={styles.inputWithIcon}
           placeholder="Password"
@@ -101,8 +123,6 @@ export default function Login({ navigation }) {
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
         />
-
-        {/* 👁 Icon to toggle password visibility */}
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <Ionicons
             name={showPassword ? "eye-off-outline" : "eye-outline"}
@@ -111,6 +131,11 @@ export default function Login({ navigation }) {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Forgot Password */}
+      <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotButton}>
+        <Text style={styles.forgotText}>Forgot Password?</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>{loading ? 'Logging in...' : 'Login'}</Text>
@@ -133,6 +158,8 @@ const styles = StyleSheet.create({
   inputContainer: { flexDirection: 'row', alignItems: 'center', width: '100%', borderWidth: 1, borderColor: '#a34f9f', borderRadius: 10, paddingHorizontal: 10, marginVertical: 8 },
   icon: { marginRight: 10 },
   inputWithIcon: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#000' },
+  forgotButton: { alignSelf: 'flex-end', marginVertical: 5 },
+  forgotText: { color: '#a34f9f', fontWeight: 'bold', fontSize: 14 },
   loginButton: { backgroundColor: '#a34f9f', paddingVertical: 15, width: '100%', borderRadius: 20, marginTop: 10, alignItems: 'center' },
   loginButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   signupText: { marginTop: 20, fontSize: 15, color: '#555', textAlign: 'center' },
