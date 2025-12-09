@@ -3,7 +3,7 @@ import { signOut } from 'firebase/auth';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { auth, db } from './firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -12,17 +12,19 @@ export default function More() {
   const [fullName, setFullName] = useState('');
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          setFullName(userSnap.data().fullName || '');
-        }
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, 'users', user.uid);
+
+    // Real-time listener for fullName
+    const unsubscribe = onSnapshot(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setFullName(snapshot.data().fullName || '');
       }
-    };
-    fetchUserData();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleRemoveDevice = async () => {

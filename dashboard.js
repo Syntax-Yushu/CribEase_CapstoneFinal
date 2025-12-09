@@ -23,7 +23,7 @@ export default function Dashboard({ navigation }) {
 
   const [deviceId, setDeviceId] = useState('Unknown Device');
   const [expoPushToken, setExpoPushToken] = useState('');
-  const [isOffline, setIsOffline] = useState(false); // <-- added offline state
+  const [isOffline, setIsOffline] = useState(false); // offline state
 
   // Notification handler
   Notifications.setNotificationHandler({
@@ -44,9 +44,22 @@ export default function Dashboard({ navigation }) {
     const connectedRef = ref(database, '.info/connected');
     const unsubscribeConnection = onValue(connectedRef, (snapshot) => {
       if (snapshot.exists()) {
-        setIsOffline(!snapshot.val()); // true if disconnected
-        if (!snapshot.val()) {
+        const offline = !snapshot.val();
+        setIsOffline(offline);
+
+        if (offline) {
           Alert.alert('You are offline', 'Displaying cached data from Firebase.');
+          // Replace all values with Unknown while offline
+          setData(prev => ({
+            ...prev,
+            temperature: 'Unknown',
+            sleepStatus: 'Unknown',
+            sound: 'Unknown',
+            fallStatus: 'Unknown',
+            fallCount: 'Unknown',
+            deviceStartTime: 'Unknown',
+            deviceLastActive: 'Unknown',
+          }));
         }
       }
     });
@@ -65,7 +78,7 @@ export default function Dashboard({ navigation }) {
         const firstDeviceSensor = devicesData[firstDeviceKey]?.sensor;
         const firstDeviceInfo = devicesData[firstDeviceKey]?.info;
 
-        if (firstDeviceSensor) {
+        if (firstDeviceSensor && firstDeviceInfo) {
           setDeviceId(firstDeviceKey);
 
           const addHistory = (historyArray, newValue) => {
@@ -79,29 +92,32 @@ export default function Dashboard({ navigation }) {
             return newHistory.slice(0, 20);
           };
 
-          setData(prev => ({
-            temperature: firstDeviceSensor.temperature || 0,
-            temperatureHistory: addHistory(prev.temperatureHistory, firstDeviceSensor.temperature || 0),
-            sleepStatus: firstDeviceSensor.sleepPattern || 'Unknown',
-            sleepHistory: addHistory(prev.sleepHistory, firstDeviceSensor.sleepPattern || 'Unknown'),
-            sound: firstDeviceSensor.sound || 'Quiet',
-            soundHistory: addHistory(prev.soundHistory, firstDeviceSensor.sound || 'Quiet'),
-            fallStatus: firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent',
-            fallHistory: addHistory(prev.fallHistory, firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent'),
-            fallCount: firstDeviceSensor.fallCount || 0,
-            deviceStartTime: firstDeviceInfo?.deviceStartTime || 'Unknown',
-            deviceLastActive: firstDeviceInfo?.deviceLastActive || 'Unknown',
-          }));
+          // Only update data if device is active
+          if (firstDeviceInfo.deviceLastActive) {
+            setData(prev => ({
+              temperature: firstDeviceSensor.temperature || 0,
+              temperatureHistory: addHistory(prev.temperatureHistory, firstDeviceSensor.temperature || 0),
+              sleepStatus: firstDeviceSensor.sleepPattern || 'Unknown',
+              sleepHistory: addHistory(prev.sleepHistory, firstDeviceSensor.sleepPattern || 'Unknown'),
+              sound: firstDeviceSensor.sound || 'Quiet',
+              soundHistory: addHistory(prev.soundHistory, firstDeviceSensor.sound || 'Quiet'),
+              fallStatus: firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent',
+              fallHistory: addHistory(prev.fallHistory, firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent'),
+              fallCount: firstDeviceSensor.fallCount || 0,
+              deviceStartTime: firstDeviceInfo.deviceStartTime || 'Unknown',
+              deviceLastActive: firstDeviceInfo.deviceLastActive || 'Unknown',
+            }));
 
-          // Notifications
-          if ((firstDeviceSensor.temperature || 0) > 37.5) {
-            sendPushNotification(`High temperature detected: ${firstDeviceSensor.temperature.toFixed(1)}°C`);
-          }
-          if (firstDeviceSensor.sound === 'Crying') {
-            sendPushNotification('Baby is crying!');
-          }
-          if (firstDeviceSensor.fallStatus === 'Absent') {
-            sendPushNotification('Fall absent!');
+            // Notifications
+            if ((firstDeviceSensor.temperature || 0) > 37.5) {
+              sendPushNotification(`High temperature detected: ${firstDeviceSensor.temperature.toFixed(1)}°C`);
+            }
+            if (firstDeviceSensor.sound === 'Crying') {
+              sendPushNotification('Baby is crying!');
+            }
+            if (firstDeviceSensor.fallStatus === 'Absent') {
+              sendPushNotification('Fall absent!');
+            }
           }
         }
       }
@@ -165,12 +181,13 @@ export default function Dashboard({ navigation }) {
     return token;
   };
 
-  const tempIsBad = data.temperature > 37.5;
+  const tempIsBad = data.temperature !== 'Unknown' && data.temperature > 37.5;
   const sleepIsBad = data.sleepStatus === 'Awake';
   const soundIsBad = data.sound === 'Crying';
   const fallIsBad = data.fallStatus === 'Absent';
 
   const renderFilteredHistory = (history, filterValue = null) => {
+    if (history === 'Unknown') return null;
     let filtered = history;
     if (filterValue !== null) {
       filtered = history.filter(item => item.value === filterValue);
@@ -192,7 +209,7 @@ export default function Dashboard({ navigation }) {
       {/* Offline Banner */}
       {isOffline && (
         <View style={{ backgroundColor: '#ffcc00', padding: 8 }}>
-          <Text style={{ textAlign: 'center', color: '#333' }}>Offline Mode: showing cached data</Text>
+          <Text style={{ textAlign: 'center', color: '#333' }}>Offline Mode: displaying Unknown values</Text>
         </View>
       )}
 
@@ -214,7 +231,9 @@ export default function Dashboard({ navigation }) {
             <FontAwesome name="thermometer-half" size={22} color={tempIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={styles.cardContent}>
               <Text style={styles.label}>Baby Temperature</Text>
-              <Text style={[styles.value, tempIsBad && styles.red]}>{data.temperature.toFixed(1)}°C</Text>
+              <Text style={[styles.value, tempIsBad && styles.red]}>
+                {data.temperature !== 'Unknown' ? data.temperature.toFixed(1) + '°C' : 'Unknown'}
+              </Text>
             </View>
             {renderFilteredHistory(data.temperatureHistory)}
           </View>
@@ -229,7 +248,9 @@ export default function Dashboard({ navigation }) {
             <MaterialCommunityIcons name="baby-face-outline" size={22} color={soundIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={styles.cardContent}>
               <Text style={styles.label}>Baby Status</Text>
-              <Text style={[styles.value, soundIsBad && styles.red]}>{data.sound}</Text>
+              <Text style={[styles.value, soundIsBad && styles.red]}>
+                {data.sound}
+              </Text>
             </View>
             {renderFilteredHistory(data.soundHistory, 'Crying')}
           </View>
@@ -244,7 +265,9 @@ export default function Dashboard({ navigation }) {
             <FontAwesome name="bed" size={22} color={sleepIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={styles.cardContent}>
               <Text style={styles.label}>Sleep Pattern</Text>
-              <Text style={[styles.value, sleepIsBad && styles.red]}>{data.sleepStatus}</Text>
+              <Text style={[styles.value, sleepIsBad && styles.red]}>
+                {data.sleepStatus}
+              </Text>
             </View>
             {renderFilteredHistory(data.sleepHistory, 'Awake')}
           </View>
@@ -264,11 +287,15 @@ export default function Dashboard({ navigation }) {
             <MaterialCommunityIcons name="alert-circle-outline" size={22} color={fallIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Presence Detection</Text>
-              <Text style={[styles.value, fallIsBad && styles.red]}>{data.fallStatus}</Text>
+              <Text style={[styles.value, fallIsBad && styles.red]}>
+                {data.fallStatus}
+              </Text>
             </View>
             <View style={{ justifyContent: 'center', alignItems: 'flex-end' }}>
               <Text style={styles.fallCountRight}>Total Absent</Text>
-              <Text style={styles.fallCountNumber}>{data.fallCount}</Text>
+              <Text style={styles.fallCountNumber}>
+                {data.fallCount !== 'Unknown' ? data.fallCount : 'Unknown'}
+              </Text>
             </View>
           </View>
         </TouchableOpacity>
