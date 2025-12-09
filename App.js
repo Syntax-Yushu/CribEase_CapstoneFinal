@@ -23,8 +23,10 @@ import SleepPattern from './sleepPattern';
 import FallDetection from './fallDetection';
 import AddDevice from './addDevice';
 import AccountSettings from './accountSettings';
-import HelpSupport from './helpSupport';
+import HelpFeedback from './helpFeedback';
 import SettingsPrivacy from './settingsPrivacy';
+import Feedback from './feedback';
+import ViewFeedback from './viewFeedback';
 
 const Stack = createNativeStackNavigator();
 
@@ -91,8 +93,10 @@ export default function App() {
         <Stack.Screen name="FallDetection" component={FallDetection} />
         <Stack.Screen name="AddDevice" component={AddDevice} />
         <Stack.Screen name="AccountSettings" component={AccountSettings} />
-        <Stack.Screen name="HelpSupport" component={HelpSupport} />
+        <Stack.Screen name="HelpFeedback" component={HelpFeedback} />
         <Stack.Screen name="SettingsPrivacy" component={SettingsPrivacy} />
+        <Stack.Screen name="Feedback" component={Feedback} />
+        <Stack.Screen name="ViewFeedback" component={ViewFeedback} />
       </Stack.Navigator>
     </NavigationContainer>
   );

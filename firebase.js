@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getDatabase } from "firebase/database";
+import { getDatabase, enableIndexedDbPersistence } from "firebase/database"; // <-- added enableIndexedDbPersistence
 
 // Your web app Firebase configuration
 const firebaseConfig = {
@@ -21,3 +21,6 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);        // Firestore
 export const database = getDatabase(app);   // RTDB
 
+// Enable offline persistence for Realtime Database
+// This will allow your app to cache writes when offline and sync when back online
+database.persistenceEnabled = true; // <-- Added line

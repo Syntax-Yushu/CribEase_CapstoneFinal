@@ -23,6 +23,7 @@ export default function Dashboard({ navigation }) {
 
   const [deviceId, setDeviceId] = useState('Unknown Device');
   const [expoPushToken, setExpoPushToken] = useState('');
+  const [isOffline, setIsOffline] = useState(false); // <-- added offline state
 
   // Notification handler
   Notifications.setNotificationHandler({
@@ -36,6 +37,21 @@ export default function Dashboard({ navigation }) {
   // Register for push notifications
   useEffect(() => {
     registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+  }, []);
+
+  // Listen for Firebase connection status (offline detection)
+  useEffect(() => {
+    const connectedRef = ref(database, '.info/connected');
+    const unsubscribeConnection = onValue(connectedRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setIsOffline(!snapshot.val()); // true if disconnected
+        if (!snapshot.val()) {
+          Alert.alert('You are offline', 'Displaying cached data from Firebase.');
+        }
+      }
+    });
+
+    return () => unsubscribeConnection();
   }, []);
 
   // Listen to Firebase updates
@@ -173,16 +189,20 @@ export default function Dashboard({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Offline Banner */}
+      {isOffline && (
+        <View style={{ backgroundColor: '#ffcc00', padding: 8 }}>
+          <Text style={{ textAlign: 'center', color: '#333' }}>Offline Mode: showing cached data</Text>
+        </View>
+      )}
+
       <Text style={styles.title}>CribEase Dashboard</Text>
       <Text style={styles.deviceId}>Device ID: {deviceId}</Text>
-      
-      <View style={styles.box}>
-      <Text style={styles.timestamp}>Device Start: {data.deviceStartTime}</Text>
-  <Text style={styles.timestamp}>
-    Last Active: {data.deviceLastActive}
-  </Text>
-</View>
 
+      <View style={styles.box}>
+        <Text style={styles.timestamp}>Device Start: {data.deviceStartTime}</Text>
+        <Text style={styles.timestamp}>Last Active: {data.deviceLastActive}</Text>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Baby Temperature */}
@@ -243,11 +263,11 @@ export default function Dashboard({ navigation }) {
           <View style={styles.row}>
             <MaterialCommunityIcons name="alert-circle-outline" size={22} color={fallIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Fall Detection</Text>
+              <Text style={styles.label}>Presence Detection</Text>
               <Text style={[styles.value, fallIsBad && styles.red]}>{data.fallStatus}</Text>
             </View>
             <View style={{ justifyContent: 'center', alignItems: 'flex-end' }}>
-              <Text style={styles.fallCountRight}>Total Falls</Text>
+              <Text style={styles.fallCountRight}>Total Absent</Text>
               <Text style={styles.fallCountNumber}>{data.fallCount}</Text>
             </View>
           </View>

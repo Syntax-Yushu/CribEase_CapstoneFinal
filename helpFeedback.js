@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function HelpSupport({ navigation }) {
+export default function HelpFeedback({ navigation }) {
   return (
     <View style={styles.container}>
       {/* Back Arrow */}
@@ -13,7 +13,7 @@ export default function HelpSupport({ navigation }) {
         <Ionicons name="arrow-undo-outline" size={35} color="#a34f9f" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Help & Support</Text>
+      <Text style={styles.title}>Help & Feedback</Text>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
@@ -37,9 +37,19 @@ export default function HelpSupport({ navigation }) {
             For technical concerns, message us at:
           </Text>
           <Text style={[styles.cardText, styles.email]}>
-            support@cribease.com
+            techguardians@cribease.com
           </Text>
         </View>
+
+        {/* ⭐ UPDATED: Send Feedback with icon */}
+        <TouchableOpacity 
+          style={styles.feedbackButton}
+          onPress={() => navigation.navigate("Feedback")}
+        >
+          <Ionicons name="chatbubble-ellipses-outline" size={22} color="#fff" style={{ marginRight: 10 }} />
+          <Text style={styles.feedbackText}>Send Feedback</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </View>
   );
@@ -90,5 +100,21 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontWeight: 'bold',
     color: '#a34f9f',
+  },
+
+  /* ⭐ UPDATED BUTTON WITH ICON */
+  feedbackButton: {
+    backgroundColor: '#a34f9f',
+    padding: 15,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  feedbackText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

@@ -34,10 +34,10 @@ export default function AccountSettings({ navigation }) {
         </TouchableOpacity>
 
         {/* DO NOT REMOVE — RESERVED for your gender logic later */}
-        <TouchableOpacity style={styles.option}>
+        {/* <TouchableOpacity style={styles.option}>
           <Ionicons name="female-outline" size={28} color="#a34f9f" style={styles.icon} />
           <Text style={styles.optionText}>Gender (Coming Soon)</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
     </View>

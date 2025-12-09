@@ -47,7 +47,7 @@ export default function TabNavigation() {
       />
 
       {/* PLUS BUTTON (CUSTOM BUTTON) */}
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Add"
         component={Dashboard} 
         options={{
@@ -58,7 +58,7 @@ export default function TabNavigation() {
             </TouchableOpacity>
           ),
         }}
-      />
+      /> */}
 
       {/* NOTIFICATIONS */}
       <Tab.Screen 

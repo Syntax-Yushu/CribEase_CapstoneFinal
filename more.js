@@ -73,7 +73,7 @@ export default function More() {
 
   const menuItems = [
     { label: 'Account Settings', icon: 'settings-outline', onPress: () => navigation.navigate('AccountSettings') },
-    { label: 'Help & Support', icon: 'help-circle-outline', onPress: () => navigation.navigate('HelpSupport') },
+    { label: 'Help & Feedback', icon: 'help-circle-outline', onPress: () => navigation.navigate('HelpFeedback') },
     { label: 'Settings & Privacy', icon: 'lock-closed-outline', onPress: () => navigation.navigate('SettingsPrivacy') }, // UPDATED
     { label: 'About Us', icon: 'information-circle-outline', onPress: handleAboutUs },
   ];
