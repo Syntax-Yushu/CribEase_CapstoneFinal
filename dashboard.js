@@ -175,8 +175,14 @@ export default function Dashboard({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>CribEase Dashboard</Text>
       <Text style={styles.deviceId}>Device ID: {deviceId}</Text>
+      
+      <View style={styles.box}>
       <Text style={styles.timestamp}>Device Start: {data.deviceStartTime}</Text>
-      <Text style={styles.timestamp}>Last Active: {data.deviceLastActive}</Text>
+  <Text style={styles.timestamp}>
+    Last Active: {data.deviceLastActive}
+  </Text>
+</View>
+
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Baby Temperature */}
@@ -256,6 +262,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   title: { fontSize: 28, fontWeight: 'bold', color: '#a34f9f', marginTop: 70, marginBottom: 5, textAlign: 'center' },
   deviceId: { fontSize: 14, color: '#555', textAlign: 'center', marginBottom: 5 },
+  box: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    backgroundColor: '#fafafa',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
   timestamp: { fontSize: 14, color: '#333', textAlign: 'center', marginBottom: 5 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
   card: { backgroundColor: '#f3e6f7', padding: 20, borderRadius: 15, marginBottom: 15 },
