@@ -16,9 +16,9 @@ export default function FallDetection({ route, navigation }) {
         <Ionicons name="arrow-undo-outline" size={35} color="#a34f9f" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Fall Detection</Text>
+      <Text style={styles.title}>Presence Detection</Text>
 
-      <Text style={styles.countLabel}>Total Falls: {fallCount}</Text>
+      <Text style={styles.countLabel}>Total Absent: {fallCount}</Text>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {fallHistory && fallHistory.length > 0 ? (

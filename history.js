@@ -120,7 +120,7 @@ export default function History({ navigation }) {
           style={[styles.tabButton, selectedTab === "fall" && styles.activeTab]}
           onPress={() => setSelectedTab("fall")}
         >
-          <Text style={[styles.tabText, selectedTab === "fall" && styles.activeTabText]}>Falls</Text>
+          <Text style={[styles.tabText, selectedTab === "fall" && styles.activeTabText]}>Presence</Text>
         </TouchableOpacity>
       </View>
 

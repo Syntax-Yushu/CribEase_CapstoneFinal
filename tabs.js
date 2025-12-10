@@ -26,7 +26,7 @@ export default function TabNavigation() {
     >
       {/* HOME / DASHBOARD */}
       <Tab.Screen 
-        name="Home" 
+        name="Dashboard" 
         component={Dashboard} 
         options={{
           tabBarIcon: ({ color, size }) => (

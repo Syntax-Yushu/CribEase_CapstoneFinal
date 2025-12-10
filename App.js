@@ -7,6 +7,7 @@ import Constants from 'expo-constants';
 import { database } from './firebase';
 import { ref, onValue } from 'firebase/database';
 
+// Import screens
 import Logo from './logo';
 import HomePage from './homePage';
 import Login from './login';
@@ -34,46 +35,65 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [expoPushToken, setExpoPushToken] = React.useState('');
+  const lastAlerts = React.useRef({
+    temperature: null,
+    sound: null,
+    fallStatus: null,
+  });
 
+  // Register device for push notifications
   React.useEffect(() => {
-    // Register device for push notifications
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+    registerForPushNotificationsAsync().then(token => {
+      if (token) setExpoPushToken(token);
+    });
+  }, []);
 
-    // Listen to Firebase changes globally
+  // Listen to Firebase changes and send notifications
+  React.useEffect(() => {
+    if (!expoPushToken) return; // Wait until token is available
+
     const devicesRef = ref(database, '/devices');
     const unsubscribe = onValue(devicesRef, snapshot => {
-      if (snapshot.exists() && expoPushToken) {
-        const devicesData = snapshot.val();
-        const firstDeviceKey = Object.keys(devicesData)[0];
-        const firstDeviceSensor = devicesData[firstDeviceKey]?.sensor;
+      if (!snapshot.exists()) return;
+      const devicesData = snapshot.val();
+      const firstDeviceKey = Object.keys(devicesData)[0];
+      const sensor = devicesData[firstDeviceKey]?.sensor;
+      if (!sensor) return;
 
-        if (firstDeviceSensor) {
-          // High temperature
-          if ((firstDeviceSensor.temperature || 0) > 37.5) {
-            sendPushNotification(`High temperature detected: ${firstDeviceSensor.temperature.toFixed(1)}°C`);
-          }
-          // Baby crying
-          if (firstDeviceSensor.sound === 'Crying') {
-            sendPushNotification('Baby is crying!');
-          }
-          // Fall absent
-          if (firstDeviceSensor.fallStatus === 'Absent') {
-            sendPushNotification('Fall absent!');
-          }
-        }
+      // High Temperature
+      if (sensor.temperature > 37.5 && lastAlerts.current.temperature !== 'high') {
+        sendPushNotification(`High temperature detected: ${sensor.temperature.toFixed(1)}°C`);
+        lastAlerts.current.temperature = 'high';
+      } else if (sensor.temperature <= 37.5) {
+        lastAlerts.current.temperature = null;
+      }
+
+      // Low Temperature
+      if (sensor.temperature < 35.5 && lastAlerts.current.temperature !== 'low') {
+        sendPushNotification(`Low temperature detected: ${sensor.temperature.toFixed(1)}°C`);
+        lastAlerts.current.temperature = 'low';
+      } else if (sensor.temperature >= 35.5) {
+        lastAlerts.current.temperature = null;
+      }
+
+      // Baby Crying
+      if (sensor.sound === 'Crying' && lastAlerts.current.sound !== 'crying') {
+        sendPushNotification('Baby is crying!');
+        lastAlerts.current.sound = 'crying';
+      } else if (sensor.sound !== 'Crying') {
+        lastAlerts.current.sound = null;
+      }
+
+      // Baby Absent
+      if (sensor.fallStatus === 'Absent' && lastAlerts.current.fallStatus !== 'absent') {
+        sendPushNotification('Baby is absent from crib!');
+        lastAlerts.current.fallStatus = 'absent';
+      } else if (sensor.fallStatus !== 'Absent') {
+        lastAlerts.current.fallStatus = null;
       }
     });
 
-    // Handle notification taps
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification tapped:', response);
-      // You can navigate to a specific screen here if needed
-    });
-
-    return () => {
-      unsubscribe();
-      subscription.remove();
-    };
+    return () => unsubscribe();
   }, [expoPushToken]);
 
   return (
@@ -139,13 +159,13 @@ export default function App() {
         finalStatus = status;
       }
       if (finalStatus !== 'granted') {
-        Alert.alert('Failed to get push token for push notification!');
+        Alert.alert('Failed to get push token for notifications!', 'Please enable notifications in settings.');
         return;
       }
       token = (await Notifications.getExpoPushTokenAsync()).data;
       console.log('Expo Push Token:', token);
     } else {
-      Alert.alert('Must use physical device for Push Notifications');
+      Alert.alert('Push Notifications require a physical device.');
     }
 
     if (Platform.OS === 'android') {

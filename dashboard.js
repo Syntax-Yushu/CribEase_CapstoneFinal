@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { database } from './firebase';
-import { ref, onValue } from 'firebase/database';
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
+import { ref, get, onValue } from 'firebase/database';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function Dashboard({ navigation }) {
@@ -22,164 +20,109 @@ export default function Dashboard({ navigation }) {
   });
 
   const [deviceId, setDeviceId] = useState('Unknown Device');
-  const [expoPushToken, setExpoPushToken] = useState('');
-  const [isOffline, setIsOffline] = useState(false); // offline state
 
-  // Notification handler
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-  });
+  const tempIntervalRef = useRef(null);
+  const presenceIntervalRef = useRef(null);
 
-  // Register for push notifications
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
-  }, []);
-
-  // Listen for Firebase connection status (offline detection)
-  useEffect(() => {
-    const connectedRef = ref(database, '.info/connected');
-    const unsubscribeConnection = onValue(connectedRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const offline = !snapshot.val();
-        setIsOffline(offline);
-
-        if (offline) {
-          Alert.alert('You are offline', 'Displaying cached data from Firebase.');
-          // Replace all values with Unknown while offline
-          setData(prev => ({
-            ...prev,
-            temperature: 'Unknown',
-            sleepStatus: 'Unknown',
-            sound: 'Unknown',
-            fallStatus: 'Unknown',
-            fallCount: 'Unknown',
-            deviceStartTime: 'Unknown',
-            deviceLastActive: 'Unknown',
-          }));
-        }
-      }
-    });
-
-    return () => unsubscribeConnection();
-  }, []);
-
-  // Listen to Firebase updates
-  useEffect(() => {
-    const devicesRef = ref(database, '/devices');
-
-    const unsubscribe = onValue(devicesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const devicesData = snapshot.val();
-        const firstDeviceKey = Object.keys(devicesData)[0];
-        const firstDeviceSensor = devicesData[firstDeviceKey]?.sensor;
-        const firstDeviceInfo = devicesData[firstDeviceKey]?.info;
-
-        if (firstDeviceSensor && firstDeviceInfo) {
-          setDeviceId(firstDeviceKey);
-
-          const addHistory = (historyArray, newValue) => {
-            const now = new Date();
-            let hours = now.getHours();
-            const minutes = now.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-            const newHistory = [{ value: newValue, time: formattedTime }, ...historyArray];
-            return newHistory.slice(0, 20);
-          };
-
-          // Only update data if device is active
-          if (firstDeviceInfo.deviceLastActive) {
-            setData(prev => ({
-              temperature: firstDeviceSensor.temperature || 0,
-              temperatureHistory: addHistory(prev.temperatureHistory, firstDeviceSensor.temperature || 0),
-              sleepStatus: firstDeviceSensor.sleepPattern || 'Unknown',
-              sleepHistory: addHistory(prev.sleepHistory, firstDeviceSensor.sleepPattern || 'Unknown'),
-              sound: firstDeviceSensor.sound || 'Quiet',
-              soundHistory: addHistory(prev.soundHistory, firstDeviceSensor.sound || 'Quiet'),
-              fallStatus: firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent',
-              fallHistory: addHistory(prev.fallHistory, firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent'),
-              fallCount: firstDeviceSensor.fallCount || 0,
-              deviceStartTime: firstDeviceInfo.deviceStartTime || 'Unknown',
-              deviceLastActive: firstDeviceInfo.deviceLastActive || 'Unknown',
-            }));
-
-            // Notifications
-            if ((firstDeviceSensor.temperature || 0) > 37.5) {
-              sendPushNotification(`High temperature detected: ${firstDeviceSensor.temperature.toFixed(1)}°C`);
-            }
-            if (firstDeviceSensor.sound === 'Crying') {
-              sendPushNotification('Baby is crying!');
-            }
-            if (firstDeviceSensor.fallStatus === 'Absent') {
-              sendPushNotification('Fall absent!');
-            }
-          }
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, [expoPushToken]);
-
-  const sendPushNotification = async (message) => {
-    if (!expoPushToken) return;
-
+  // Fetch sensor data every 5 minutes (temperature, sleep, sound)
+  const fetchSensorData = async () => {
     try {
-      await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Accept-encoding': 'gzip, deflate',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: expoPushToken,
-          sound: 'default',
-          title: 'CribEase Alert',
-          body: message,
-          data: { message },
-        }),
-      });
+      const devicesRef = ref(database, '/devices');
+      const snapshot = await get(devicesRef);
+
+      if (!snapshot.exists()) return;
+
+      const devicesData = snapshot.val();
+      const firstDeviceKey = Object.keys(devicesData)[0];
+      const firstDeviceSensor = devicesData[firstDeviceKey]?.sensor;
+      const firstDeviceInfo = devicesData[firstDeviceKey]?.info;
+
+      if (!firstDeviceSensor || !firstDeviceInfo) return;
+
+      setDeviceId(firstDeviceKey);
+
+      const addHistory = (historyArray, newValue) => {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+        const newHistory = [{ value: newValue, time: formattedTime }, ...historyArray];
+        return newHistory.slice(0, 20);
+      };
+
+      setData(prev => ({
+        ...prev,
+        temperature: firstDeviceSensor.temperature || 0,
+        temperatureHistory: addHistory(prev.temperatureHistory, firstDeviceSensor.temperature || 0),
+        sleepStatus: firstDeviceSensor.sleepPattern || 'Unknown',
+        sleepHistory: addHistory(prev.sleepHistory, firstDeviceSensor.sleepPattern || 'Unknown'),
+        sound: firstDeviceSensor.sound || 'Quiet',
+        soundHistory: addHistory(prev.soundHistory, firstDeviceSensor.sound || 'Quiet'),
+        deviceStartTime: firstDeviceInfo.deviceStartTime || 'Unknown',
+        deviceLastActive: firstDeviceInfo.deviceLastActive || 'Unknown',
+      }));
     } catch (error) {
-      console.log('Error sending push notification:', error);
+      console.error('Error fetching sensor data:', error);
     }
   };
 
-  const registerForPushNotificationsAsync = async () => {
-    let token;
-    if (Constants.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        Alert.alert('Failed to get push token for push notification!');
-        return;
-      }
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-      console.log('Expo Push Token:', token);
-    } else {
-      Alert.alert('Must use physical device for Push Notifications');
-    }
+  // Fetch presence/fallStatus every second
+  const fetchPresenceData = async () => {
+  try {
+    const devicesRef = ref(database, '/devices');
+    const snapshot = await get(devicesRef);
 
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
+    if (!snapshot.exists()) return;
 
-    return token;
-  };
+    const devicesData = snapshot.val();
+    const firstDeviceKey = Object.keys(devicesData)[0];
+    const firstDeviceSensor = devicesData[firstDeviceKey]?.sensor;
+    const firstDeviceInfo = devicesData[firstDeviceKey]?.info;
+
+    if (!firstDeviceSensor || !firstDeviceInfo) return;
+
+    const addHistory = (historyArray, newValue) => {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+      const newHistory = [{ value: newValue, time: formattedTime }, ...historyArray];
+      return newHistory.slice(0, 20);
+    };
+
+    setData(prev => ({
+      ...prev,
+      fallStatus: firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent',
+      fallHistory: addHistory(prev.fallHistory, firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent'),
+      fallCount: firstDeviceSensor.fallCount || 0,
+      deviceLastActive: firstDeviceInfo.deviceLastActive || prev.deviceLastActive, // update lastActive every second
+    }));
+  } catch (error) {
+    console.error('Error fetching presence data:', error);
+  }
+};
+
+
+  // Start intervals
+  useEffect(() => {
+    fetchSensorData(); // initial fetch
+    fetchPresenceData(); // initial fetch
+
+    // Temperature, sleep, sound every 5 mins
+    tempIntervalRef.current = setInterval(fetchSensorData, 5 * 60 * 1000);
+
+    // Presence every second
+    presenceIntervalRef.current = setInterval(fetchPresenceData, 1000);
+
+    return () => {
+      clearInterval(tempIntervalRef.current);
+      clearInterval(presenceIntervalRef.current);
+    };
+  }, []);
 
   const tempIsBad = data.temperature !== 'Unknown' && data.temperature > 37.5;
   const sleepIsBad = data.sleepStatus === 'Awake';
@@ -206,22 +149,27 @@ export default function Dashboard({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Offline Banner */}
-      {isOffline && (
-        <View style={{ backgroundColor: '#ffcc00', padding: 8 }}>
-          <Text style={{ textAlign: 'center', color: '#333' }}>Offline Mode: displaying Unknown values</Text>
-        </View>
-      )}
-
       <Text style={styles.title}>CribEase Dashboard</Text>
       <Text style={styles.deviceId}>Device ID: {deviceId}</Text>
 
-      <View style={styles.box}>
-        <Text style={styles.timestamp}>Device Start: {data.deviceStartTime}</Text>
-        <Text style={styles.timestamp}>Last Active: {data.deviceLastActive}</Text>
+      <View style={styles.deviceInfoContainer}>
+        <View style={styles.deviceBox}>
+          <Text style={styles.deviceLabel}>Device Start</Text>
+          <Text style={styles.deviceValue}>{data.deviceStartTime}</Text>
+        </View>
+        <View style={styles.deviceBox}>
+          <Text style={styles.deviceLabel}>Last Active</Text>
+          <Text style={styles.deviceValue}>{data.deviceLastActive}</Text>
+        </View>
       </View>
+      
+      
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+      <Text style={[styles.label, { fontWeight: 'bold' }]}>
+ Sensor Readings
+</Text>
+
         {/* Baby Temperature */}
         <TouchableOpacity
           style={styles.card}
@@ -235,7 +183,7 @@ export default function Dashboard({ navigation }) {
                 {data.temperature !== 'Unknown' ? data.temperature.toFixed(1) + '°C' : 'Unknown'}
               </Text>
             </View>
-            {renderFilteredHistory(data.temperatureHistory)}
+            {/* {renderFilteredHistory(data.temperatureHistory)} */}
           </View>
         </TouchableOpacity>
 
@@ -248,11 +196,9 @@ export default function Dashboard({ navigation }) {
             <MaterialCommunityIcons name="baby-face-outline" size={22} color={soundIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={styles.cardContent}>
               <Text style={styles.label}>Baby Status</Text>
-              <Text style={[styles.value, soundIsBad && styles.red]}>
-                {data.sound}
-              </Text>
+              <Text style={[styles.value, soundIsBad && styles.red]}>{data.sound}</Text>
             </View>
-            {renderFilteredHistory(data.soundHistory, 'Crying')}
+            {/* {renderFilteredHistory(data.soundHistory, 'Crying')} */}
           </View>
         </TouchableOpacity>
 
@@ -265,15 +211,13 @@ export default function Dashboard({ navigation }) {
             <FontAwesome name="bed" size={22} color={sleepIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={styles.cardContent}>
               <Text style={styles.label}>Sleep Pattern</Text>
-              <Text style={[styles.value, sleepIsBad && styles.red]}>
-                {data.sleepStatus}
-              </Text>
+              <Text style={[styles.value, sleepIsBad && styles.red]}>{data.sleepStatus}</Text>
             </View>
-            {renderFilteredHistory(data.sleepHistory, 'Awake')}
+            {/* {renderFilteredHistory(data.sleepHistory, 'Awake')} */}
           </View>
         </TouchableOpacity>
 
-        {/* Fall Detection */}
+        {/* Presence Detection */}
         <TouchableOpacity
           style={styles.card}
           onPress={() =>
@@ -287,19 +231,14 @@ export default function Dashboard({ navigation }) {
             <MaterialCommunityIcons name="alert-circle-outline" size={22} color={fallIsBad ? 'red' : '#4d148c'} style={styles.icon} />
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Presence Detection</Text>
-              <Text style={[styles.value, fallIsBad && styles.red]}>
-                {data.fallStatus}
-              </Text>
+              <Text style={[styles.value, fallIsBad && styles.red]}>{data.fallStatus}</Text>
             </View>
             <View style={{ justifyContent: 'center', alignItems: 'flex-end' }}>
               <Text style={styles.fallCountRight}>Total Absent</Text>
-              <Text style={styles.fallCountNumber}>
-                {data.fallCount !== 'Unknown' ? data.fallCount : 'Unknown'}
-              </Text>
+              <Text style={styles.fallCountNumber}>{data.fallCount !== 'Unknown' ? data.fallCount : 'Unknown'}</Text>
             </View>
           </View>
         </TouchableOpacity>
-
       </ScrollView>
     </View>
   );
@@ -308,17 +247,11 @@ export default function Dashboard({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   title: { fontSize: 28, fontWeight: 'bold', color: '#a34f9f', marginTop: 70, marginBottom: 5, textAlign: 'center' },
-  deviceId: { fontSize: 14, color: '#555', textAlign: 'center', marginBottom: 5 },
-  box: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    backgroundColor: '#fafafa',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  timestamp: { fontSize: 14, color: '#333', textAlign: 'center', marginBottom: 5 },
+  deviceId: { fontSize: 14, color: '#555', textAlign: 'center', marginBottom: 10 },
+  deviceInfoContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 10 },
+  deviceBox: { flex: 1, padding: 12, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, backgroundColor: '#02f7ffff', marginHorizontal: 5, alignItems: 'center' },
+  deviceLabel: { fontSize: 14, color: '#333', marginBottom: 5, fontWeight: '500' },
+  deviceValue: { fontSize: 16, color: '#4d148c', fontWeight: 'bold' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
   card: { backgroundColor: '#f3e6f7', padding: 20, borderRadius: 15, marginBottom: 15 },
   cardContent: { flex: 1 },
