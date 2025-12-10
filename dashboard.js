@@ -112,8 +112,8 @@ export default function Dashboard({ navigation }) {
     fetchSensorData(); // initial fetch
     fetchPresenceData(); // initial fetch
 
-    // Temperature, sleep, sound every 5 mins
-    tempIntervalRef.current = setInterval(fetchSensorData, 5 * 60 * 1000);
+    // Temperature, sleep, sound every 1 min
+    tempIntervalRef.current = setInterval(fetchSensorData, 1 * 60 * 1000);
 
     // Presence every second
     presenceIntervalRef.current = setInterval(fetchPresenceData, 1000);
@@ -150,7 +150,7 @@ export default function Dashboard({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>CribEase Dashboard</Text>
-      <Text style={styles.deviceId}>Device ID: {deviceId}</Text>
+      {/* <Text style={styles.deviceId}>Device ID: {deviceId}</Text> */}
 
       <View style={styles.deviceInfoContainer}>
         <View style={styles.deviceBox}>
@@ -246,10 +246,10 @@ export default function Dashboard({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#a34f9f', marginTop: 70, marginBottom: 5, textAlign: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#a34f9f', marginTop: 70, marginBottom: 50, textAlign: 'center' },
   deviceId: { fontSize: 14, color: '#555', textAlign: 'center', marginBottom: 10 },
   deviceInfoContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 10 },
-  deviceBox: { flex: 1, padding: 12, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, backgroundColor: '#02f7ffff', marginHorizontal: 5, alignItems: 'center' },
+  deviceBox: { flex: 1, padding: 12, borderWidth: 1, borderColor: '#ccc', borderRadius: 8, backgroundColor: '#ffffff', marginHorizontal: 5, alignItems: 'center' },
   deviceLabel: { fontSize: 14, color: '#333', marginBottom: 5, fontWeight: '500' },
   deviceValue: { fontSize: 16, color: '#4d148c', fontWeight: 'bold' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
