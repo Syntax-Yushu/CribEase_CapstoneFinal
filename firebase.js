@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDs6eEpYkKzOIbit60mitGDY6qbLMclxvs",
@@ -19,3 +20,4 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);        // Firestore
 export const database = getDatabase(app);   // RTDB
+export const functions = getFunctions(app); // Cloud Functions

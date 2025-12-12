@@ -2,9 +2,11 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput, Alert, Modal } fro
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { auth, db } from './firebase';
-import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, verifyPasswordResetCode } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from './firebase';
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
@@ -79,26 +81,44 @@ export default function Login({ navigation }) {
     setModalVisible(true);
   };
 
-  const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      alert("Please fill in all fields.");
+  const handleResetPassword = async () => {
+    if (!email) {
+      alert("Please enter your email address.");
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      alert("Passwords do not match.");
-      return;
-    }
-
+    setLoading(true);
     try {
-      await updatePassword(auth.currentUser, newPassword);
-      alert("Password updated successfully!");
+      // First try Firebase's built-in email
+      await sendPasswordResetEmail(auth, email);
+      
+      // Also send via Cloud Function for better reliability
+      try {
+        const sendPasswordResetEmailFunction = httpsCallable(functions, 'sendPasswordResetEmail');
+        await sendPasswordResetEmailFunction({
+          email: email,
+          continueUrl: 'https://your-app.com',
+        });
+      } catch (cloudError) {
+        console.log('Cloud function error (optional):', cloudError);
+      }
+
+      alert("Password reset email sent! Check your inbox and spam folder for instructions.");
       setModalVisible(false);
-      setNewPassword('');
-      setConfirmPassword('');
+      setEmail('');
     } catch (error) {
       console.log(error);
-      alert("Error updating password. The user must be logged in recently.");
+      if (error.code === 'auth/user-not-found') {
+        alert("No account found with this email.");
+      } else if (error.code === 'auth/invalid-email') {
+        alert("Invalid email format.");
+      } else if (error.code === 'auth/too-many-requests') {
+        alert("Too many reset requests. Please try again later.");
+      } else {
+        alert("Error sending reset email. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,30 +184,27 @@ export default function Login({ navigation }) {
         <View style={styles.modalBackground}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Reset Password</Text>
+            <Text style={styles.modalSubtitle}>We'll send you an email with instructions to reset your password.</Text>
 
             <TextInput
               style={styles.modalInput}
-              placeholder="New Password"
+              placeholder="Enter your email"
               placeholderTextColor="#555"
-              secureTextEntry
-              value={newPassword}
-              onChangeText={setNewPassword}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              editable={!loading}
             />
 
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Confirm New Password"
-              placeholderTextColor="#555"
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
-
-            <TouchableOpacity style={styles.modalButton} onPress={handleChangePassword}>
-              <Text style={styles.modalButtonText}>Update Password</Text>
+            <TouchableOpacity 
+              style={styles.modalButton} 
+              onPress={handleResetPassword}
+              disabled={loading}
+            >
+              <Text style={styles.modalButtonText}>{loading ? 'Sending...' : 'Send Reset Email'}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <TouchableOpacity onPress={() => setModalVisible(false)} disabled={loading}>
               <Text style={styles.modalCancel}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -216,7 +233,8 @@ const styles = StyleSheet.create({
   // Modal
   modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalBox: { width: '85%', backgroundColor: '#fff', borderRadius: 15, padding: 20, alignItems: 'center' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#a34f9f' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#a34f9f' },
+  modalSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 15 },
   modalInput: { width: '100%', borderWidth: 1, borderColor: '#a34f9f', borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16 },
   modalButton: { backgroundColor: '#a34f9f', paddingVertical: 12, width: '100%', borderRadius: 15, alignItems: 'center', marginTop: 5 },
   modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },

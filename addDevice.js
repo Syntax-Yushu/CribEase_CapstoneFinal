@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth, db } from './firebase';
+import { auth, db, database } from './firebase';
 import { signOut } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
 
 export default function AddDevice({ navigation }) {
   const [deviceId, setDeviceId] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleAddDevice = async () => {
     if (deviceId.trim() === '') {
@@ -14,9 +16,20 @@ export default function AddDevice({ navigation }) {
       return;
     }
 
+    setLoading(true);
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
+
+      // Validate device exists in Firebase Realtime Database
+      const deviceRef = ref(database, `/devices/${deviceId}`);
+      const snapshot = await get(deviceRef);
+      
+      if (!snapshot.exists()) {
+        Alert.alert('Error', 'Device ID not found. Please check and try again.');
+        setLoading(false);
+        return;
+      }
 
       // Update Firestore
       await updateDoc(doc(db, 'users', user.uid), {
@@ -31,6 +44,8 @@ export default function AddDevice({ navigation }) {
     } catch (error) {
       Alert.alert('Error', 'Failed to save device.');
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,8 +71,8 @@ export default function AddDevice({ navigation }) {
         onChangeText={setDeviceId}
       />
 
-      <TouchableOpacity style={styles.addButton} onPress={handleAddDevice}>
-        <Text style={styles.buttonText}>Add Device</Text>
+      <TouchableOpacity style={styles.addButton} onPress={handleAddDevice} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? 'Validating...' : 'Add Device'}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

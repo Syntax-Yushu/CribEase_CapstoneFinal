@@ -112,8 +112,8 @@ export default function Dashboard({ navigation }) {
     fetchSensorData(); // initial fetch
     fetchPresenceData(); // initial fetch
 
-    // Temperature, sleep, sound every 1 min
-    tempIntervalRef.current = setInterval(fetchSensorData, 1 * 60 * 1000);
+    // Temperature, sleep, sound every 1 second
+    tempIntervalRef.current = setInterval(fetchSensorData, 1000);
 
     // Presence every second
     presenceIntervalRef.current = setInterval(fetchPresenceData, 1000);
