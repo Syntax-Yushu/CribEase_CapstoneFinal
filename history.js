@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { database } from './firebase';
 import { ref, onValue } from 'firebase/database';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function History({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("temperature");
@@ -150,34 +151,104 @@ export default function History({ navigation }) {
       return <Text style={styles.noRecord}>No records yet.</Text>;
     }
 
+    // Calculate statistics based on type
+    const getStats = () => {
+      if (isAlert) {
+        const alertCount = history.filter(h => h.value === 'Crying' || h.value === 'Absent').length;
+        const totalCount = history.length;
+        return {
+          alertCount,
+          totalCount,
+          percentage: Math.round((alertCount / totalCount) * 100)
+        };
+      } else {
+        const temps = history
+          .map(h => typeof h.value === 'number' ? h.value : parseFloat(h.value))
+          .filter(v => !isNaN(v));
+        
+        if (temps.length === 0) return null;
+        
+        return {
+          avg: (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1),
+          min: Math.min(...temps).toFixed(1),
+          max: Math.max(...temps).toFixed(1),
+          current: temps[0].toFixed(1),
+        };
+      }
+    };
+
+    const stats = getStats();
+
     return (
-      <View style={styles.timelineContainer}>
-        {/* Timeline vertical line */}
-        <View style={styles.timelineLine} />
-
-        {/* Timeline entries */}
-        {history.map((item, index) => {
-          const dotColor = getTimelineColor(item.value, isAlert);
-          const displayValue = typeof item.value === 'number' ? item.value.toFixed(1) : item.value;
-
-          return (
-            <View key={index} style={styles.timelineEntry}>
-              {/* Timeline dot */}
-              <View style={[styles.timelineDot, { backgroundColor: dotColor }]} />
-
-              {/* Content */}
-              <View style={styles.timelineContent}>
-                <View style={styles.valueRow}>
-                  <Text style={[styles.timelineValue, { color: dotColor }]}>
-                    {displayValue}
-                  </Text>
-                  <Text style={styles.timelineTime}>{item.time}</Text>
+      <View>
+        {/* Statistics Cards */}
+        {stats && (
+          <View style={styles.statsContainer}>
+            {isAlert ? (
+              <>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Alerts</Text>
+                  <Text style={styles.statValue}>{stats.alertCount}</Text>
                 </View>
-                <Text style={styles.timelineDate}>{item.date}</Text>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Total</Text>
+                  <Text style={styles.statValue}>{stats.totalCount}</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Alert %</Text>
+                  <Text style={[styles.statValue, { color: stats.percentage > 50 ? '#E53935' : '#4CAF50' }]}>
+                    {stats.percentage}%
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Current</Text>
+                  <Text style={styles.statValue}>{stats.current}°C</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Average</Text>
+                  <Text style={styles.statValue}>{stats.avg}°C</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Range</Text>
+                  <Text style={styles.statValue}>{stats.min}-{stats.max}°C</Text>
+                </View>
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Timeline */}
+        <View style={styles.timelineContainer}>
+          {/* Timeline vertical line */}
+          <View style={styles.timelineLine} />
+
+          {/* Timeline entries */}
+          {history.map((item, index) => {
+            const dotColor = getTimelineColor(item.value, isAlert);
+            const displayValue = typeof item.value === 'number' ? item.value.toFixed(1) : item.value;
+
+            return (
+              <View key={index} style={styles.timelineEntry}>
+                {/* Timeline dot */}
+                <View style={[styles.timelineDot, { backgroundColor: dotColor }]} />
+
+                {/* Content */}
+                <View style={styles.timelineContent}>
+                  <View style={styles.valueRow}>
+                    <Text style={[styles.timelineValue, { color: dotColor }]}>
+                      {displayValue}
+                    </Text>
+                    <Text style={styles.timelineTime}>{item.time}</Text>
+                  </View>
+                  <Text style={styles.timelineDate}>{item.date}</Text>
+                </View>
               </View>
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
       </View>
     );
   };
@@ -281,7 +352,7 @@ export default function History({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 70, paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: '#f8f9fa', paddingTop: 70, paddingHorizontal: 20 },
   scrollContent: { paddingBottom: 30 },
 
   title: {
@@ -320,15 +391,54 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#f3e6f7',
+    backgroundColor: '#fff',
     padding: 18,
     borderRadius: 15,
     marginBottom: 18,
     borderLeftWidth: 6,
     borderLeftColor: '#a34f9f',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  cardHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
   cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#4d148c' },
+
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    borderTopWidth: 3,
+    borderTopColor: '#a34f9f',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#999',
+    marginBottom: 6,
+    fontWeight: '500',
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4d148c',
+  },
 
   recordRow: {
     flexDirection: 'row',
@@ -440,5 +550,4 @@ const styles = StyleSheet.create({
   },
 
   red: { color: 'red', fontWeight: 'bold' },
-  noRecord: { fontSize: 14, color: '#555', fontStyle: 'italic' },
 });

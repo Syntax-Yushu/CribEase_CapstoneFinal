@@ -142,7 +142,10 @@ export default function BabyProfileBoard({ navigation }) {
         <View style={styles.headerSection}>
           <MaterialCommunityIcons name={icon} size={40} color={color} />
           <View style={styles.nameSection}>
-            <Text style={styles.babyName}>{babyData.babyName}</Text>
+            <View style={styles.nameContainer}>
+              <Text style={styles.babyLabel}>Baby </Text>
+              <Text style={styles.babyNameColored}>{babyData.babyName}</Text>
+            </View>
             <Text style={styles.age}>{babyData.age}</Text>
           </View>
           <MaterialCommunityIcons name="pencil-outline" size={20} color="#999" />
@@ -278,10 +281,24 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  babyLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
   babyName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+  },
+  babyNameColored: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#a34f9f',
   },
   age: {
     fontSize: 13,

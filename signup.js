@@ -18,6 +18,7 @@ export default function Signup({ navigation }) {
   const [birthdate, setBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -49,6 +50,8 @@ export default function Signup({ navigation }) {
     // if (!gender) { alert('Please select your gender'); return; }
     if (!role) { alert('Please select your role'); return; }
 
+    setLoading(true);
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -69,6 +72,8 @@ export default function Signup({ navigation }) {
     } catch (error) {
       console.error(error);
       alert(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -214,8 +219,8 @@ export default function Signup({ navigation }) {
         </TouchableOpacity>
 
         {/* REGISTER BUTTON */}
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-          <Text style={styles.registerButtonText}>Register</Text>
+        <TouchableOpacity style={styles.registerButton} onPress={handleRegister} disabled={loading}>
+          <Text style={styles.registerButtonText}>{loading ? 'Registering' : 'Register'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>

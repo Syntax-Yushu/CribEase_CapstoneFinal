@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, Platform, TouchableOpacity }
 import { ref, onValue } from 'firebase/database';
 import { database } from './firebase';
 import * as Notifications from 'expo-notifications';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Configure notification handling
@@ -16,7 +16,10 @@ Notifications.setNotificationHandler({
 });
 
 export default function NotificationsScreen() {
+  const navigation = useNavigation();
+  const route = useRoute();
   const [alerts, setAlerts] = useState([]);
+  const [visitedAlerts, setVisitedAlerts] = useState([]);
   const [isDeviceActive, setIsDeviceActive] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState(null);
   const notificationListener = useRef();
@@ -101,6 +104,14 @@ export default function NotificationsScreen() {
     };
   }, []);
 
+  // Update badge count when alerts or visitedAlerts change
+  useEffect(() => {
+    const unvisitedCount = alerts.length - visitedAlerts.length;
+    if (route.params?.onUnvisitedCountChange) {
+      route.params.onUnvisitedCountChange(unvisitedCount);
+    }
+  }, [alerts, visitedAlerts, route.params]);
+
   // Request permissions and register for push notifications
   const registerForPushNotifications = async () => {
     try {
@@ -174,12 +185,12 @@ export default function NotificationsScreen() {
   const handleAlert = (type, value, checkHigh, highMessage, checkLow = null, lowMessage = null) => {
     if (checkHigh(value) && lastAlerts.current[type] !== 'high') {
       const message = highMessage(value);
-      addAlert(message, 'high');
+      addAlert(message, 'high', type, value);
       sendPushNotification('CribEase Alert', message, 'high');
       lastAlerts.current[type] = 'high';
     } else if (checkLow && checkLow(value) && lastAlerts.current[type] !== 'low') {
       const message = lowMessage(value);
-      addAlert(message, 'low');
+      addAlert(message, 'low', type, value);
       sendPushNotification('CribEase Alert', message, 'low');
       lastAlerts.current[type] = 'low';
     } else if (!checkHigh(value) && (!checkLow || !checkLow(value))) {
@@ -188,13 +199,15 @@ export default function NotificationsScreen() {
   };
 
   // Add alert to in-app list
-  const addAlert = (msg, level) => {
+  const addAlert = (msg, level, alertType, value) => {
     const timestamp = new Date().toLocaleString();
     const newAlert = {
       id: Date.now().toString() + Math.random(),
       message: msg,
       level,
       time: timestamp,
+      type: alertType, // 'temperature', 'sound', 'fallStatus'
+      value: value,    // actual sensor value
     };
     setAlerts(prev => [newAlert, ...prev].slice(0, 50)); // Keep only last 50 alerts
   };
@@ -255,6 +268,59 @@ export default function NotificationsScreen() {
     }
   };
 
+  // Handle alert click - navigate to relevant screen and mark as visited
+  const handleAlertPress = (alert) => {
+    console.log('Alert pressed:', alert.type);
+    
+    // Mark alert as visited
+    if (!visitedAlerts.includes(alert.id)) {
+      setVisitedAlerts([...visitedAlerts, alert.id]);
+    }
+    
+    try {
+      switch (alert.type) {
+        case 'temperature':
+          console.log('Navigating to BabyTemp');
+          navigation.navigate('BabyTemp', { 
+            temperatureHistory: [{ value: alert.value, time: alert.time }] 
+          });
+          break;
+        case 'sound':
+          console.log('Navigating to BabyStatus');
+          navigation.navigate('BabyStatus', { 
+            soundHistory: [{ value: 'Crying', time: alert.time }] 
+          });
+          break;
+        case 'fallStatus':
+          console.log('Navigating to PresenceDetection');
+          navigation.navigate('PresenceDetection', { 
+            fallHistory: [{ value: 'Absent', time: alert.time }],
+            fallCount: 0 
+          });
+          break;
+        default:
+          console.log('Unknown alert type:', alert.type);
+          break;
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
+  // Get icon for alert type
+  const getAlertIcon = (type) => {
+    switch (type) {
+      case 'temperature':
+        return 'thermometer';
+      case 'sound':
+        return 'microphone';
+      case 'fallStatus':
+        return 'alert-circle';
+      default:
+        return 'bell';
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -287,12 +353,40 @@ export default function NotificationsScreen() {
 
       <ScrollView style={styles.scrollArea}>
         {alerts.length === 0 && <Text style={styles.noAlert}>No alerts yet.</Text>}
-        {alerts.map(alert => (
-          <View key={alert.id} style={[styles.alertItem, alert.level === 'high' ? styles.alertHigh : styles.alertLow]}>
-            <Text style={styles.alertMessage}>{alert.message}</Text>
-            <Text style={styles.alertTime}>{alert.time}</Text>
-          </View>
-        ))}
+        {alerts.map(alert => {
+          const isVisited = visitedAlerts.includes(alert.id);
+          return (
+          <TouchableOpacity 
+            key={alert.id} 
+            style={[
+              styles.alertItem, 
+              isVisited ? styles.alertVisited : (alert.level === 'high' ? styles.alertHigh : styles.alertLow)
+            ]}
+            onPress={() => handleAlertPress(alert)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.alertContentContainer}>
+              <View style={styles.alertIcon}>
+                <MaterialCommunityIcons 
+                  name={getAlertIcon(alert.type)} 
+                  size={20} 
+                  color={alert.level === 'high' ? '#dc3545' : '#17a2b8'} 
+                />
+              </View>
+              <View style={styles.alertTextContainer}>
+                <Text style={styles.alertMessage}>{alert.message}</Text>
+                <Text style={styles.alertTime}>{alert.time}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.dismissButton}
+                onPress={() => setAlerts(prev => prev.filter(a => a.id !== alert.id))}
+              >
+                <MaterialCommunityIcons name="close" size={18} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        );
+        })}
       </ScrollView>
     </View>
   );
@@ -345,9 +439,34 @@ const styles = StyleSheet.create({
   tokenWarning: { fontSize: 12, color: '#e74c3c', textAlign: 'center', marginBottom: 10, fontWeight: '600' },
   scrollArea: { marginTop: 10 },
   noAlert: { textAlign: 'center', color: '#666', marginTop: 20, fontSize: 16 },
-  alertItem: { padding: 15, borderRadius: 12, marginBottom: 10, borderLeftWidth: 6 },
+  alertItem: { padding: 0, borderRadius: 12, marginBottom: 10, borderLeftWidth: 6, overflow: 'hidden' },
   alertHigh: { backgroundColor: '#f8d7da', borderLeftColor: '#dc3545' },
   alertLow: { backgroundColor: '#d1ecf1', borderLeftColor: '#17a2b8' },
-  alertMessage: { fontSize: 16, fontWeight: '600', color: '#333' },
-  alertTime: { fontSize: 13, color: '#555', marginTop: 5 },
+  alertVisited: { backgroundColor: '#e8f5e9', borderLeftColor: '#4CAF50' },
+  alertContentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+  },
+  alertIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  alertTextContainer: {
+    flex: 1,
+  },
+  alertMessage: { fontSize: 15, fontWeight: '600', color: '#333', marginBottom: 4 },
+  alertTime: { fontSize: 12, color: '#666', fontStyle: 'italic' },
+  dismissButton: {
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
 });

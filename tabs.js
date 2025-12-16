@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,8 +14,8 @@ const Tab = createBottomTabNavigator();
 
 export default function TabNavigation() {
   const [notificationCount, setNotificationCount] = useState(0);
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [currentTab, setCurrentTab] = useState('Dashboard');
+  const unvisitedCountRef = useRef(0);
 
   // Listen to alerts from Firebase
   useEffect(() => {
@@ -29,20 +29,11 @@ export default function TabNavigation() {
         const sensor = devicesData[firstDeviceKey]?.sensor;
         if (!sensor) return;
 
-        // Count active alerts
-        let count = 0;
-        if (sensor.temperature > 37.5 || sensor.temperature < 35.5) count++;
-        if (sensor.sound === 'Crying') count++;
-        if (sensor.fallStatus === 'Absent') count++;
-
-        // Only show count if not on Notifications tab
+        // Update badge based on unvisited alerts count (from notifications.js)
         if (currentTab !== 'Notifications') {
-          setNotificationCount(count);
-          setHasUnreadNotifications(count > 0);
+          setNotificationCount(unvisitedCountRef.current);
         } else {
-          // Clear badge when user visits notifications
           setNotificationCount(0);
-          setHasUnreadNotifications(false);
         }
       });
     }, 1000);
@@ -107,7 +98,13 @@ export default function TabNavigation() {
       {/* NOTIFICATIONS */}
       <Tab.Screen 
         name="Notifications" 
-        component={Notifications} 
+        component={Notifications}
+        initialParams={{ onUnvisitedCountChange: (count) => {
+          unvisitedCountRef.current = count;
+          if (currentTab !== 'Notifications') {
+            setNotificationCount(count);
+          }
+        }}}
         options={{
           tabBarIcon: ({ color }) => (
             <View>
