@@ -216,27 +216,27 @@ export default function Login({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', paddingHorizontal: 30, paddingTop: 80, backgroundColor: '#fff' },
+  container: { flex: 1, alignItems: 'center', paddingHorizontal: 25, paddingTop: 80, backgroundColor: '#f8f9fa' },
   backButton: { position: 'absolute', top: 50, left: 20, zIndex: 1 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#a34f9f', marginBottom: 5 },
-  subtitle: { fontSize: 18, color: '#a34f9f', marginBottom: 30 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', width: '100%', borderWidth: 1, borderColor: '#a34f9f', borderRadius: 10, paddingHorizontal: 10, marginVertical: 8 },
-  icon: { marginRight: 10 },
-  inputWithIcon: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#000' },
-  forgotButton: { alignSelf: 'flex-end', marginVertical: 5 },
-  forgotText: { color: '#a34f9f', fontWeight: 'bold', fontSize: 14 },
-  loginButton: { backgroundColor: '#a34f9f', paddingVertical: 15, width: '100%', borderRadius: 20, marginTop: 10, alignItems: 'center' },
-  loginButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  signupText: { marginTop: 20, fontSize: 15, color: '#555', textAlign: 'center' },
-  signupLink: { color: '#a34f9f', fontWeight: 'bold' },
+  title: { fontSize: 32, fontWeight: '800', color: '#a34f9f', marginBottom: 8, letterSpacing: 1 },
+  subtitle: { fontSize: 16, color: '#999', marginBottom: 35, fontWeight: '500', letterSpacing: 0.5 },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', width: '100%', borderWidth: 0, backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 16, marginVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2, paddingVertical: 2 },
+  icon: { marginRight: 12, opacity: 0.7 },
+  inputWithIcon: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#000' },
+  forgotButton: { alignSelf: 'flex-end', marginVertical: 8, marginTop: 15 },
+  forgotText: { color: '#a34f9f', fontWeight: '600', fontSize: 13, textDecorationLine: 'underline' },
+  loginButton: { backgroundColor: '#a34f9f', paddingVertical: 16, width: '100%', borderRadius: 28, marginTop: 20, alignItems: 'center', shadowColor: '#a34f9f', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+  loginButtonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
+  signupText: { marginTop: 22, fontSize: 14, color: '#666', textAlign: 'center' },
+  signupLink: { color: '#a34f9f', fontWeight: '700' },
 
   // Modal
-  modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalBox: { width: '85%', backgroundColor: '#fff', borderRadius: 15, padding: 20, alignItems: 'center' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#a34f9f' },
-  modalSubtitle: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 15 },
-  modalInput: { width: '100%', borderWidth: 1, borderColor: '#a34f9f', borderRadius: 10, padding: 12, marginBottom: 10, fontSize: 16 },
-  modalButton: { backgroundColor: '#a34f9f', paddingVertical: 12, width: '100%', borderRadius: 15, alignItems: 'center', marginTop: 5 },
-  modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  modalCancel: { marginTop: 12, color: '#a34f9f', fontWeight: 'bold', fontSize: 15 }
+  modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' },
+  modalBox: { width: '85%', backgroundColor: '#fff', borderRadius: 20, padding: 28, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 8 },
+  modalTitle: { fontSize: 22, fontWeight: '800', marginBottom: 12, color: '#a34f9f', letterSpacing: 0.5 },
+  modalSubtitle: { fontSize: 14, color: '#999', textAlign: 'center', marginBottom: 20, fontWeight: '500' },
+  modalInput: { width: '100%', borderWidth: 0, backgroundColor: '#f5f5f5', borderRadius: 12, padding: 14, marginBottom: 12, fontSize: 16, color: '#000' },
+  modalButton: { backgroundColor: '#a34f9f', paddingVertical: 14, width: '100%', borderRadius: 20, alignItems: 'center', marginTop: 8, shadowColor: '#a34f9f', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 4 },
+  modalButtonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
+  modalCancel: { marginTop: 15, color: '#a34f9f', fontWeight: '600', fontSize: 14, textDecorationLine: 'underline' }
 });

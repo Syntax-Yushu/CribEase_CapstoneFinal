@@ -8,14 +8,20 @@ String getTimestamp() {
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
 
+  int hour = p_tm->tm_hour;
+  const char* ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12;
+  if (hour == 0) hour = 12;  // 12 AM/PM instead of 0
+
   char buffer[40];
-  sprintf(buffer, "%02d/%02d/%04d - %02d:%02d:%02d",
+  sprintf(buffer, "%02d/%02d/%04d - %02d:%02d:%02d %s",
           p_tm->tm_mon + 1,
           p_tm->tm_mday,
           p_tm->tm_year + 1900,
-          p_tm->tm_hour,
+          hour,
           p_tm->tm_min,
-          p_tm->tm_sec);
+          p_tm->tm_sec,
+          ampm);
 
   return String(buffer);
 }
@@ -278,6 +284,9 @@ void loop() {
 
     // ------------------- Human Body Temperature -------------------
     float temp = getBodyTempC();
+    
+    // Round to 1 decimal place
+    temp = round(temp * 10) / 10.0;
 
     // ------------------- Radar parsing -------------------
     if (Radar.available() >= 2) {  // read at least 2 bytes
@@ -300,6 +309,9 @@ void loop() {
     }
     micValue = total / 50;
     soundLevel = (micValue < 2800) ? "Quiet" : "Crying";
+    
+    // DEBUG: Print microphone value
+    Serial.printf("🎤 MIC VALUE: %d | Sound: %s\n", micValue, soundLevel.c_str());
 
     // ------------------- Ultrasonic -------------------
     digitalWrite(TRIG, LOW);
@@ -333,11 +345,13 @@ void loop() {
     currentData.sleepPattern = sleepPattern;
     currentData.timestamp = getTimestamp();
 
-    // 🔥 Send Sensor Data or cache if offline
+    // 🔥 Send Sensor Data or cache if offline (only send temperature if object is present)
     if (signupOK && WiFi.status() == WL_CONNECTED && Firebase.ready()) {
       FirebaseJson json;
       json.add("device_id", deviceID);
-      json.add("temperature", temp);
+      if (objectPresent) {
+        json.add("temperature", temp);
+      }
       json.add("sound", soundLevel);
       json.add("distance", distance);
       json.add("fallStatus", fallStatus);

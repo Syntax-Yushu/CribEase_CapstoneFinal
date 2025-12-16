@@ -6,6 +6,7 @@ import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function History({ navigation }) {
   const [selectedTab, setSelectedTab] = useState("temperature");
+  const [isDeviceActive, setIsDeviceActive] = useState(false);
   const [historyData, setHistoryData] = useState({
     temperatureHistory: [],
     sleepHistory: [],
@@ -13,6 +14,56 @@ export default function History({ navigation }) {
     fallHistory: [],
     fallCount: 0,
   });
+
+  // Check if device is active (last active within 15 seconds)
+  const checkDeviceActive = (lastActiveTime) => {
+    if (!lastActiveTime || lastActiveTime === 'Unknown') {
+      return false;
+    }
+    
+    try {
+      const parts = lastActiveTime.split(' - ');
+      if (parts.length !== 2) {
+        return false;
+      }
+      
+      const dateParts = parts[0].split('/');
+      const timeAndAmpm = parts[1].split(' ');
+      
+      if (timeAndAmpm.length < 2) {
+        return false;
+      }
+      
+      const timeParts = timeAndAmpm[0].split(':');
+      const ampm = timeAndAmpm[1];
+      
+      if (dateParts.length !== 3 || timeParts.length !== 3) {
+        return false;
+      }
+      
+      const month = parseInt(dateParts[0]) - 1;
+      const day = parseInt(dateParts[1]);
+      const year = parseInt(dateParts[2]);
+      let hour = parseInt(timeParts[0]);
+      const minute = parseInt(timeParts[1]);
+      const second = parseInt(timeParts[2]);
+      
+      if (ampm === 'PM' && hour !== 12) {
+        hour += 12;
+      } else if (ampm === 'AM' && hour === 12) {
+        hour = 0;
+      }
+      
+      const lastActiveDate = new Date(year, month, day, hour, minute, second);
+      const currentDate = new Date();
+      const timeDiffSeconds = (currentDate - lastActiveDate) / 1000;
+      
+      return timeDiffSeconds <= 15;
+    } catch (error) {
+      console.error('Error parsing timestamp:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const devicesRef = ref(database, '/devices');
@@ -25,6 +76,11 @@ export default function History({ navigation }) {
 
         if (firstDeviceSensor) {
           const addHistory = (historyArray, newValue) => {
+            // Don't add if the latest entry has the same value
+            if (historyArray.length > 0 && historyArray[0].value === newValue) {
+              return historyArray;
+            }
+
             const now = new Date();
 
             const year = now.getFullYear();
@@ -54,6 +110,13 @@ export default function History({ navigation }) {
             fallHistory: addHistory(prev.fallHistory, firstDeviceSensor.fallStatus === 'Present' ? 'Present' : 'Absent'),
             fallCount: firstDeviceSensor.fallCount || 0,
           }));
+
+          // Check device status
+          const firstDeviceInfo = devicesData[firstDeviceKey]?.info;
+          if (firstDeviceInfo) {
+            const active = checkDeviceActive(firstDeviceInfo.deviceLastActive);
+            setIsDeviceActive(active);
+          }
         }
       }
     });
@@ -61,37 +124,77 @@ export default function History({ navigation }) {
     return () => unsubscribe();
   }, []);
 
+  const getTimelineColor = (value, isAlert) => {
+    if (!isAlert) {
+      // Temperature color coding
+      if (typeof value === 'number') {
+        if (value > 37.5) return '#e74c3c'; // High temp - red
+        if (value < 35.5) return '#3498db'; // Low temp - blue
+        return '#27ae60'; // Normal - green
+      }
+      // Sleep pattern colors
+      if (value === 'Sleeping') return '#9b59b6'; // Purple
+      if (value === 'Restless') return '#f39c12'; // Orange
+      return '#95a5a6'; // Gray for unknown
+    } else {
+      // Alert colors
+      if (value === 'Crying') return '#e74c3c'; // Red
+      if (value === 'Absent') return '#e74c3c'; // Red
+      if (value === 'Present') return '#27ae60'; // Green
+      return '#95a5a6'; // Gray
+    }
+  };
+
   const renderHistoryList = (history, isAlert = false) => {
     if (!history || history.length === 0) {
       return <Text style={styles.noRecord}>No records yet.</Text>;
     }
 
-    return history.map((item, index) => (
-      <View key={index}>
-        <View style={styles.recordRow}>
-          <View>
-            <Text
-              style={[
-                styles.recordValue,
-                isAlert && item.value === 'Crying' && styles.red
-              ]}
-            >
-              {item.value}
-            </Text>
-            <Text style={styles.recordDate}>{item.date}</Text>
-          </View>
+    return (
+      <View style={styles.timelineContainer}>
+        {/* Timeline vertical line */}
+        <View style={styles.timelineLine} />
 
-          <Text style={styles.recordTime}>{item.time}</Text>
-        </View>
+        {/* Timeline entries */}
+        {history.map((item, index) => {
+          const dotColor = getTimelineColor(item.value, isAlert);
+          const displayValue = typeof item.value === 'number' ? item.value.toFixed(1) : item.value;
 
-        {index !== history.length - 1 && <View style={styles.divider} />}
+          return (
+            <View key={index} style={styles.timelineEntry}>
+              {/* Timeline dot */}
+              <View style={[styles.timelineDot, { backgroundColor: dotColor }]} />
+
+              {/* Content */}
+              <View style={styles.timelineContent}>
+                <View style={styles.valueRow}>
+                  <Text style={[styles.timelineValue, { color: dotColor }]}>
+                    {displayValue}
+                  </Text>
+                  <Text style={styles.timelineTime}>{item.time}</Text>
+                </View>
+                <Text style={styles.timelineDate}>{item.date}</Text>
+              </View>
+            </View>
+          );
+        })}
       </View>
-    ));
+    );
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>History</Text>
+
+      {/* DEVICE STATUS */}
+      <View style={[styles.statusContainer, { backgroundColor: isDeviceActive ? '#E8F5E9' : '#FFF3E0' }]}>
+        <View style={[styles.statusDot, { backgroundColor: isDeviceActive ? '#4CAF50' : '#F44336' }]} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.statusText, { color: isDeviceActive ? '#2E7D32' : '#E65100' }]}>
+            {isDeviceActive ? 'Device Online' : 'Device Offline'}
+          </Text>
+        </View>
+      </View>
 
       {/* FILTER TABS */}
       <View style={styles.tabContainer}>
@@ -241,6 +344,99 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1b5db',
     marginVertical: 5,
     opacity: 0.5,
+  },
+
+  noRecord: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+
+  red: {
+    color: '#e74c3c',
+  },
+
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  /* TIMELINE STYLES */
+  timelineContainer: {
+    position: 'relative',
+    paddingLeft: 40,
+    paddingVertical: 10,
+  },
+  timelineLine: {
+    position: 'absolute',
+    left: 16,
+    top: 20,
+    bottom: 0,
+    width: 2,
+    backgroundColor: '#e0c5f0',
+  },
+  timelineEntry: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
+  timelineDot: {
+    position: 'absolute',
+    left: -32,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  timelineContent: {
+    flex: 1,
+    backgroundColor: '#f8f5fb',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 5,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  timelineValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  timelineTime: {
+    fontSize: 13,
+    color: '#888',
+    fontWeight: '600',
+  },
+  timelineDate: {
+    fontSize: 12,
+    color: '#aaa',
   },
 
   red: { color: 'red', fontWeight: 'bold' },

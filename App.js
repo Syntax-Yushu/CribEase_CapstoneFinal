@@ -21,7 +21,7 @@ import Device from './device';
 import BabyTemp from './babyTemp';
 import BabyStatus from './babyStatus';
 import SleepPattern from './sleepPattern';
-import FallDetection from './fallDetection';
+import PresenceDetection from './presenceDetection';
 import AddDevice from './addDevice';
 import AccountSettings from './accountSettings';
 import HelpFeedback from './helpFeedback';
@@ -30,7 +30,7 @@ import Feedback from './feedback';
 import ViewFeedback from './viewFeedback';
 import Subscription from './subscription';
 import SubscriptionView from './subscriptionview';
-//import BabyProfile from './babyProfile';
+import BabyProfile from './babyProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -104,6 +104,7 @@ export default function App() {
         <Stack.Screen name="HomePage" component={HomePage} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Signup" component={Signup} />
+        <Stack.Screen name="BabyProfile" component={BabyProfile} />
         <Stack.Screen name="Dashboard" component={Dashboard} />
         <Stack.Screen name="TabNavigation" component={TabNavigation} />
         <Stack.Screen name="History" component={History} />
@@ -113,7 +114,7 @@ export default function App() {
         <Stack.Screen name="BabyTemp" component={BabyTemp} />
         <Stack.Screen name="BabyStatus" component={BabyStatus} />
         <Stack.Screen name="SleepPattern" component={SleepPattern} />
-        <Stack.Screen name="FallDetection" component={FallDetection} />
+        <Stack.Screen name="PresenceDetection" component={PresenceDetection} />
         <Stack.Screen name="AddDevice" component={AddDevice} />
         <Stack.Screen name="AccountSettings" component={AccountSettings} />
         <Stack.Screen name="HelpFeedback" component={HelpFeedback} />

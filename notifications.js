@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Platform, TouchableOpacity } from 'react-native';
 import { ref, onValue } from 'firebase/database';
 import { database } from './firebase';
 import * as Notifications from 'expo-notifications';
+import { useFocusEffect } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -15,6 +17,7 @@ Notifications.setNotificationHandler({
 
 export default function NotificationsScreen() {
   const [alerts, setAlerts] = useState([]);
+  const [isDeviceActive, setIsDeviceActive] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState(null);
   const notificationListener = useRef();
   const responseListener = useRef();
@@ -24,6 +27,56 @@ export default function NotificationsScreen() {
     sound: null,
     fallStatus: null,
   });
+
+  // Check if device is active (last active within 15 seconds)
+  const checkDeviceActive = (lastActiveTime) => {
+    if (!lastActiveTime || lastActiveTime === 'Unknown') {
+      return false;
+    }
+    
+    try {
+      const parts = lastActiveTime.split(' - ');
+      if (parts.length !== 2) {
+        return false;
+      }
+      
+      const dateParts = parts[0].split('/');
+      const timeAndAmpm = parts[1].split(' ');
+      
+      if (timeAndAmpm.length < 2) {
+        return false;
+      }
+      
+      const timeParts = timeAndAmpm[0].split(':');
+      const ampm = timeAndAmpm[1];
+      
+      if (dateParts.length !== 3 || timeParts.length !== 3) {
+        return false;
+      }
+      
+      const month = parseInt(dateParts[0]) - 1;
+      const day = parseInt(dateParts[1]);
+      const year = parseInt(dateParts[2]);
+      let hour = parseInt(timeParts[0]);
+      const minute = parseInt(timeParts[1]);
+      const second = parseInt(timeParts[2]);
+      
+      if (ampm === 'PM' && hour !== 12) {
+        hour += 12;
+      } else if (ampm === 'AM' && hour === 12) {
+        hour = 0;
+      }
+      
+      const lastActiveDate = new Date(year, month, day, hour, minute, second);
+      const currentDate = new Date();
+      const timeDiffSeconds = (currentDate - lastActiveDate) / 1000;
+      
+      return timeDiffSeconds <= 15;
+    } catch (error) {
+      console.error('Error parsing timestamp:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Request notification permissions and get push token
@@ -85,7 +138,14 @@ export default function NotificationsScreen() {
         const devicesData = snapshot.val();
         const firstDeviceKey = Object.keys(devicesData)[0];
         const sensor = devicesData[firstDeviceKey]?.sensor;
+        const deviceInfo = devicesData[firstDeviceKey]?.info;
         if (!sensor) return;
+
+        // Update device status
+        if (deviceInfo) {
+          const active = checkDeviceActive(deviceInfo.deviceLastActive);
+          setIsDeviceActive(active);
+        }
 
         // Handle alerts
         handleAlert('temperature', sensor.temperature, 
@@ -197,7 +257,27 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🔔 Notifications</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>🔔 Notifications</Text>
+        {alerts.length > 0 && (
+          <TouchableOpacity 
+            style={styles.clearButton}
+            onPress={() => setAlerts([])}
+          >
+            <Text style={styles.clearButtonText}>Clear All</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* DEVICE STATUS */}
+      <View style={[styles.statusContainer, { backgroundColor: isDeviceActive ? '#E8F5E9' : '#FFF3E0' }]}>
+        <View style={[styles.statusDot, { backgroundColor: isDeviceActive ? '#4CAF50' : '#F44336' }]} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.statusText, { color: isDeviceActive ? '#2E7D32' : '#E65100' }]}>
+            {isDeviceActive ? 'Device Online' : 'Device Offline'}
+          </Text>
+        </View>
+      </View>
       
       {expoPushToken ? (
         <Text style={styles.tokenInfo}>Push notifications enabled ✓</Text>
@@ -220,7 +300,47 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 40 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#a34f9f', marginBottom: 15, marginTop: 30, textAlign: 'center' },
+  headerContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 15, 
+    marginTop: 30 
+  },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#a34f9f', textAlign: 'center', flex: 1 },
+  clearButton: {
+    backgroundColor: '#a34f9f',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   tokenInfo: { fontSize: 12, color: '#27ae60', textAlign: 'center', marginBottom: 10, fontWeight: '600' },
   tokenWarning: { fontSize: 12, color: '#e74c3c', textAlign: 'center', marginBottom: 10, fontWeight: '600' },
   scrollArea: { marginTop: 10 },

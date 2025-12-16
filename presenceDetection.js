@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function FallDetection({ route, navigation }) {
+export default function PresenceDetection({ route, navigation }) {
   const { fallHistory, fallCount } = route.params;
 
   return (

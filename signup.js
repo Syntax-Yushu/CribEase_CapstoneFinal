@@ -61,10 +61,11 @@ export default function Signup({ navigation }) {
         birthdate: birthdate.toISOString().split('T')[0],
         deviceID: null,
         createdAt: new Date(),
+        profileCompleted: false,
       });
 
-      alert('Registered successfully!');
-      navigation.navigate('Login');
+      alert('Account created! Now let\'s set up your baby profile.');
+      navigation.navigate('BabyProfile', { userUID: user.uid });
     } catch (error) {
       console.error(error);
       alert(error.message);
@@ -229,23 +230,23 @@ export default function Signup({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 30 },
+  container: { flex: 1, backgroundColor: '#f8f9fa', paddingHorizontal: 25 },
   backButton: { position: 'absolute', top: 50, left: 20, zIndex: 5 },
-  title: { marginTop: 90, fontSize: 28, fontWeight: 'bold', color: '#a34f9f' },
-  subtitle: { fontSize: 18, color: '#a34f9f', marginBottom: 30 },
+  title: { marginTop: 90, fontSize: 32, fontWeight: '800', color: '#a34f9f', letterSpacing: 1 },
+  subtitle: { fontSize: 16, color: '#999', marginBottom: 35, fontWeight: '500' },
   inputContainer: { flexDirection: 'row', alignItems: 'center', width: '100%',
-    borderWidth: 1, borderColor: '#a34f9f', borderRadius: 10, paddingHorizontal: 10, marginVertical: 8 },
-  icon: { marginRight: 10 },
-  inputWithIcon: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#000' },
-  picker: { width: '100%' },
-  label: { alignSelf: 'flex-start', marginBottom: 5, marginTop: 10, fontSize: 16, fontWeight: 'bold', color: '#a34f9f' },
-  checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 15, width: '100%' },
-  checkbox: { width: 25, height: 25, borderWidth: 1, borderColor: '#a34f9f', borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
-  checkedBox: { backgroundColor: '#a34f9f' },
-  checkboxText: { marginLeft: 10, color: '#a34f9f', flex: 1 },
-  linkText: { color: '#a34f9f', fontWeight: 'bold', textDecorationLine: 'underline' },
-  registerButton: { backgroundColor: '#a34f9f', paddingVertical: 15, width: '100%', borderRadius: 20, marginTop: 10, alignItems: 'center' },
-  registerButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  loginText: { marginTop: 20, fontSize: 15, color: '#555' },
-  loginLink: { color: '#a34f9f', fontWeight: 'bold' },
+    borderWidth: 0, backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 16, marginVertical: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2, paddingVertical: 2 },
+  icon: { marginRight: 12, opacity: 0.7 },
+  inputWithIcon: { flex: 1, paddingVertical: 14, fontSize: 16, color: '#000' },
+  picker: { width: '100%', color: '#000' },
+  label: { alignSelf: 'flex-start', marginBottom: 8, marginTop: 16, fontSize: 14, fontWeight: '700', color: '#a34f9f', letterSpacing: 0.5 },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'flex-start', marginVertical: 20, width: '100%' },
+  checkbox: { width: 24, height: 24, borderWidth: 2, borderColor: '#a34f9f', borderRadius: 6, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  checkedBox: { backgroundColor: '#a34f9f', borderColor: '#a34f9f' },
+  checkboxText: { marginLeft: 12, color: '#666', flex: 1, fontSize: 14, fontWeight: '500', lineHeight: 20 },
+  linkText: { color: '#a34f9f', fontWeight: '700', textDecorationLine: 'underline' },
+  registerButton: { backgroundColor: '#a34f9f', paddingVertical: 16, width: '100%', borderRadius: 28, marginTop: 25, alignItems: 'center', shadowColor: '#a34f9f', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+  registerButtonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
+  loginText: { marginTop: 22, fontSize: 14, color: '#666' },
+  loginLink: { color: '#a34f9f', fontWeight: '700' },
 });

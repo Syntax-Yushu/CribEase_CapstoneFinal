@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { database } from './firebase';
+import { ref, onValue } from 'firebase/database';
 
 import Dashboard from './dashboard';
 import History from './history';
@@ -11,6 +13,43 @@ import More from './more';
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigation() {
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+  const [currentTab, setCurrentTab] = useState('Dashboard');
+
+  // Listen to alerts from Firebase
+  useEffect(() => {
+    const devicesRef = ref(database, '/devices');
+
+    const interval = setInterval(() => {
+      onValue(devicesRef, snapshot => {
+        if (!snapshot.exists()) return;
+        const devicesData = snapshot.val();
+        const firstDeviceKey = Object.keys(devicesData)[0];
+        const sensor = devicesData[firstDeviceKey]?.sensor;
+        if (!sensor) return;
+
+        // Count active alerts
+        let count = 0;
+        if (sensor.temperature > 37.5 || sensor.temperature < 35.5) count++;
+        if (sensor.sound === 'Crying') count++;
+        if (sensor.fallStatus === 'Absent') count++;
+
+        // Only show count if not on Notifications tab
+        if (currentTab !== 'Notifications') {
+          setNotificationCount(count);
+          setHasUnreadNotifications(count > 0);
+        } else {
+          // Clear badge when user visits notifications
+          setNotificationCount(0);
+          setHasUnreadNotifications(false);
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentTab]);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -22,6 +61,11 @@ export default function TabNavigation() {
         },
         tabBarActiveTintColor: '#a34f9f',
         tabBarInactiveTintColor: '#888',
+      }}
+      screenListeners={{
+        state: (e) => {
+          setCurrentTab(e.data.state.routes[e.data.state.index].name);
+        },
       }}
     >
       {/* HOME / DASHBOARD */}
@@ -66,7 +110,16 @@ export default function TabNavigation() {
         component={Notifications} 
         options={{
           tabBarIcon: ({ color }) => (
-            <Ionicons name="notifications" size={28} color={color} />
+            <View>
+              <Ionicons name="notifications" size={28} color={color} />
+              {notificationCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />
@@ -95,5 +148,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     top: -10,
     elevation: 5,
+  },
+  badge: {
+    position: 'absolute',
+    right: -8,
+    top: -3,
+    backgroundColor: '#f44336',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
