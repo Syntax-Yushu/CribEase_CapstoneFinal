@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Platform, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Platform, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
@@ -22,6 +22,9 @@ export default function Signup({ navigation }) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -214,7 +217,7 @@ export default function Signup({ navigation }) {
             {agree && <Ionicons name="checkmark" size={18} color="#fff" />}
           </View>
           <Text style={styles.checkboxText}>
-            I agree to <Text style={styles.linkText} onPress={() => Linking.openURL('https://www.cribease.com/terms')}>CribEase Terms of Use</Text> and <Text style={styles.linkText} onPress={() => Linking.openURL('https://www.cribease.com/privacy')}>Privacy Policy</Text>
+            I agree to <Text style={styles.linkText} onPress={() => setShowTermsModal(true)}>CribEase Terms of Use</Text> and <Text style={styles.linkText} onPress={() => setShowPrivacyModal(true)}>Privacy Policy</Text>
           </Text>
         </TouchableOpacity>
 
@@ -230,6 +233,88 @@ export default function Signup({ navigation }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* TERMS OF USE MODAL */}
+      <Modal
+        visible={showTermsModal}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowTermsModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowTermsModal(false)}>
+              <Ionicons name="close-outline" size={30} color="#a34f9f" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Terms of Use</Text>
+            <View style={{ width: 30 }} />
+          </View>
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={true}>
+            <Text style={styles.modalSubtitle}>CribEase Terms of Use</Text>
+            <Text style={styles.modalText}>
+              Last Updated: December 17, 2025{"\n\n"}
+              <Text style={styles.modalBold}>1. Acceptance of Terms</Text>{"\n"}
+              By creating an account and using CribEase, you agree to comply with these Terms of Use. If you do not agree with any part of these terms, you may not use our service.{"\n\n"}
+              <Text style={styles.modalBold}>2. User Accounts</Text>{"\n"}
+              You are responsible for maintaining the confidentiality of your account information and password. You agree to accept responsibility for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.{"\n\n"}
+              <Text style={styles.modalBold}>3. Acceptable Use</Text>{"\n"}
+              You agree not to use CribEase for any unlawful purpose or in violation of any laws. You will not harass, abuse, or harm others, or attempt to gain unauthorized access to any system.{"\n\n"}
+              <Text style={styles.modalBold}>4. Baby Safety</Text>{"\n"}
+              CribEase is designed to assist with baby care monitoring. However, it should not replace professional medical advice. Always consult with healthcare professionals for serious health concerns.{"\n\n"}
+              <Text style={styles.modalBold}>5. Intellectual Property</Text>{"\n"}
+              All content, features, and functionality of CribEase are owned by CribEase, its licensors, or other providers. You may not reproduce, distribute, or transmit any content without our written permission.{"\n\n"}
+              <Text style={styles.modalBold}>6. Limitation of Liability</Text>{"\n"}
+              CribEase is provided "as is" without any warranties. We are not liable for any indirect, incidental, special, or consequential damages arising from the use of our service.{"\n\n"}
+              <Text style={styles.modalBold}>7. Changes to Terms</Text>{"\n"}
+              We reserve the right to modify these terms at any time. Your continued use of CribEase after changes constitute your acceptance of the new terms.{"\n\n"}
+              <Text style={styles.modalBold}>8. Contact Us</Text>{"\n"}
+              If you have any questions about these terms, please contact us at techguardians@gmail.com
+            </Text>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* PRIVACY POLICY MODAL */}
+      <Modal
+        visible={showPrivacyModal}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowPrivacyModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowPrivacyModal(false)}>
+              <Ionicons name="close-outline" size={30} color="#a34f9f" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Privacy Policy</Text>
+            <View style={{ width: 30 }} />
+          </View>
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={true}>
+            <Text style={styles.modalSubtitle}>CribEase Privacy Policy</Text>
+            <Text style={styles.modalText}>
+              Last Updated: December 17, 2025{"\n\n"}
+              <Text style={styles.modalBold}>1. Information We Collect</Text>{"\n"}
+              We collect information you provide directly to us, such as your name, email address, date of birth, and baby profile information. We also collect information about device usage patterns and sensor data.{"\n\n"}
+              <Text style={styles.modalBold}>2. How We Use Your Information</Text>{"\n"}
+              We use your information to provide, maintain, and improve CribEase services. This includes personalizing your experience, sending notifications about your baby's status, and analyzing service performance.{"\n\n"}
+              <Text style={styles.modalBold}>3. Data Security</Text>{"\n"}
+              We implement industry-standard security measures to protect your personal information. However, no method of transmission is 100% secure. We encourage you to use strong passwords and protect your account.{"\n\n"}
+              <Text style={styles.modalBold}>4. Third-Party Services</Text>{"\n"}
+              CribEase may integrate with third-party services such as Firebase. These services have their own privacy policies. We encourage you to review their privacy practices.{"\n\n"}
+              <Text style={styles.modalBold}>5. Children's Privacy</Text>{"\n"}
+              CribEase is designed for parents and caregivers. We do not intentionally collect personal information from children. Parents are responsible for protecting their children's information.{"\n\n"}
+              <Text style={styles.modalBold}>6. Data Retention</Text>{"\n"}
+              We retain your information for as long as your account is active. You may request deletion of your data at any time by contacting us.{"\n\n"}
+              <Text style={styles.modalBold}>7. Your Rights</Text>{"\n"}
+              You have the right to access, update, or delete your personal information. To exercise these rights, please contact us at support@cribease.com{"\n\n"}
+              <Text style={styles.modalBold}>8. Changes to This Policy</Text>{"\n"}
+              We may update this privacy policy periodically. We will notify you of any significant changes via email or through the app.{"\n\n"}
+              <Text style={styles.modalBold}>9. Contact Us</Text>{"\n"}
+              If you have questions about our privacy practices, please contact us at techguardians@gmail.com
+            </Text>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -254,4 +339,13 @@ const styles = StyleSheet.create({
   registerButtonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
   loginText: { marginTop: 22, fontSize: 14, color: '#666' },
   loginLink: { color: '#a34f9f', fontWeight: '700' },
+  
+  // Modal Styles
+  modalContainer: { flex: 1, backgroundColor: '#f8f9fa' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', marginTop: Platform.OS === 'ios' ? 50 : 10 },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: '#a34f9f' },
+  modalContent: { padding: 20 },
+  modalSubtitle: { fontSize: 18, fontWeight: '700', color: '#a34f9f', marginBottom: 16 },
+  modalBold: { fontWeight: '700', color: '#333' },
+  modalText: { fontSize: 14, lineHeight: 22, color: '#555', fontWeight: '400' },
 });

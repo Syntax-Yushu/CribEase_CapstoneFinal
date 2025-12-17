@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated } from 'react-native';
 import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Logo({ navigation }) {
@@ -22,10 +23,9 @@ export default function Logo({ navigation }) {
       }),
     ]).start();
 
-    // Check if user is already logged in
-    const timer = setTimeout(async () => {
+    // Listen to auth state changes properly
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
-        const user = auth.currentUser;
         const deviceID = await AsyncStorage.getItem('deviceID');
 
         if (user && deviceID) {
@@ -42,9 +42,9 @@ export default function Logo({ navigation }) {
         console.error('Error checking authentication:', error);
         navigation.replace('HomePage');
       }
-    }, 5000);
+    });
 
-    return () => clearTimeout(timer);
+    return () => unsubscribe();
   }, []);
 
   return (

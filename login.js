@@ -13,6 +13,7 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
@@ -36,6 +37,15 @@ export default function Login({ navigation }) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // Save Remember Me preference if enabled
+      if (rememberMe) {
+        await AsyncStorage.setItem('rememberMe', 'true');
+        await AsyncStorage.setItem('userEmail', email);
+      } else {
+        await AsyncStorage.removeItem('rememberMe');
+        await AsyncStorage.removeItem('userEmail');
+      }
 
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
@@ -162,6 +172,14 @@ export default function Login({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* Remember Me Checkbox */}
+      <TouchableOpacity style={styles.rememberMeContainer} onPress={() => setRememberMe(!rememberMe)}>
+        <View style={[styles.rememberMeCheckbox, rememberMe && styles.rememberMeChecked]}>
+          {rememberMe && <Ionicons name="checkmark" size={16} color="#fff" />}
+        </View>
+        <Text style={styles.rememberMeText}>Remember me</Text>
+      </TouchableOpacity>
+
       {/* Forgot Password */}
       <TouchableOpacity onPress={handleForgotPasswordClick} style={styles.forgotButton}>
         <Text style={styles.forgotText}>Forgot Password?</Text>
@@ -229,6 +247,10 @@ const styles = StyleSheet.create({
   loginButtonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
   signupText: { marginTop: 22, fontSize: 14, color: '#666', textAlign: 'center' },
   signupLink: { color: '#a34f9f', fontWeight: '700' },
+  rememberMeContainer: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 12 },
+  rememberMeCheckbox: { width: 20, height: 20, borderWidth: 2, borderColor: '#a34f9f', borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
+  rememberMeChecked: { backgroundColor: '#a34f9f', borderColor: '#a34f9f' },
+  rememberMeText: { marginLeft: 10, color: '#666', fontSize: 14, fontWeight: '500' },
 
   // Modal
   modalBackground: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' },
