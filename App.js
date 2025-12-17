@@ -31,6 +31,7 @@ import ViewFeedback from './viewFeedback';
 import Subscription from './subscription';
 import SubscriptionView from './subscriptionview';
 import BabyProfile from './babyProfile';
+import AIInsights from './aiInsights';
 
 const Stack = createNativeStackNavigator();
 
@@ -123,6 +124,7 @@ export default function App() {
         <Stack.Screen name="ViewFeedback" component={ViewFeedback} />
         <Stack.Screen name="Subscription" component={Subscription} />
         <Stack.Screen name="SubscriptionView" component={SubscriptionView} />
+        <Stack.Screen name="AIInsights" component={AIInsights} />
         {/* <Stack.Screen name="BabyProfile" component={BabyProfile} /> */}
       </Stack.Navigator>
     </NavigationContainer>

@@ -74,6 +74,7 @@ export default function More() {
   };
 
   const menuItems = [
+    { label: 'AI Insights', icon: 'sparkles-outline', onPress: () => navigation.navigate('AIInsights') },
     { label: 'Account Settings', icon: 'settings-outline', onPress: () => navigation.navigate('AccountSettings') },
     { label: 'Subscription', icon: 'card-outline', onPress: () => navigation.navigate('Subscription') },
     { label: 'Help & Feedback', icon: 'help-circle-outline', onPress: () => navigation.navigate('HelpFeedback') },
